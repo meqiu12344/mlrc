@@ -11,32 +11,35 @@ interface WizardProps {
   onComplete: () => void;
 }
 
-export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack, onComplete }: WizardProps) {
-  const totalSteps = 20;
-  const progress = (currentStep / totalSteps) * 100;
+const totalSteps = 24;
 
-  const canProceed = () => {
+export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack, onComplete }: WizardProps) {
+  const isCurrentStepValid = () => {
     switch (currentStep) {
-      case 1: return formData.budget > 0;
-      case 2: return formData.riskTolerance !== null;
-      case 3: return formData.driveLocation !== null;
-      case 4: return formData.passengers !== null;
-      case 5: return formData.priority !== null;
-      case 6: return formData.carAttitude !== null;
-      case 7: return formData.annualMileage !== null;
-      case 8: return formData.parkingType !== null;
-      case 9: return formData.mechanicalSkills !== null;
-      case 10: return formData.terrainType !== null;
-      case 11: return formData.carAge !== null;
-      case 12: return formData.brandPreference !== null;
-      case 13: return formData.trunkNeeds !== null;
-      case 14: return formData.transmission !== null;
-      case 15: return formData.towing !== null;
-      case 16: return formData.winterConditions !== null;
-      case 17: return formData.fuelType !== null;
-      case 18: return formData.acceleration !== null;
-      case 19: return formData.heightClearance !== null;
-      case 20: return formData.plannedOwnership !== null;
+      case 1: return formData.monthlyIncome > 0;
+      case 2: return formData.dailyCommute !== null;
+      case 3: return formData.commuteType !== null;
+      case 4: return formData.parkingAtHome !== null;
+      case 5: return formData.parkingAtWork !== null;
+      case 6: return formData.householdSize >= 1;
+      case 7: return true; // childrenCount can be 0
+      case 8: return true; // elderlyPassengers is boolean
+      case 9: return formData.weeklyGroceries !== null;
+      case 10: return formData.sportsEquipment !== null;
+      case 11: return formData.petTransport !== null;
+      case 12: return true; // strollerType can be null if no kids
+      case 13: return true; // longTripsPerYear can be 0
+      case 14: return formData.vacationStyle !== null;
+      case 15: return formData.winterConditions !== null;
+      case 16: return formData.roadType !== null;
+      case 17: return formData.hilliness !== null;
+      case 18: return formData.weekendActivities !== null;
+      case 19: return formData.trailerNeeded !== null;
+      case 20: return formData.mainConcern !== null;
+      case 21: return formData.mechanicalSkills !== null;
+      case 22: return formData.plannedOwnership !== null;
+      case 23: return formData.maxMonthlyPayment !== null || formData.monthlyIncome > 0;
+      case 24: return formData.childSeats >= 0;
       default: return false;
     }
   };
@@ -50,946 +53,693 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 py-20 bg-slate-50">
-      <div className="max-w-2xl w-full">
+    <div className="min-h-screen bg-slate-50 px-6 py-20">
+      <div className="max-w-2xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-12">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-sm text-gray-500">Krok {currentStep} z {totalSteps}</span>
-            <span className="text-sm text-gray-500">{Math.round(progress)}%</span>
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Pytanie {currentStep} z {totalSteps}</span>
+            <span>{Math.round((currentStep / totalSteps) * 100)}%</span>
           </div>
           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-[#b85450] transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
+              className="h-full bg-[#b85450] transition-all duration-300"
+              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
             />
           </div>
         </div>
 
         {/* Question Card */}
         <div className="bg-white rounded-2xl shadow-sm p-8 md:p-12 mb-8">
+          
+          {/* Step 1: Monthly Income */}
           {currentStep === 1 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Jaki jest Twój maksymalny budżet na zakup?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Ile zarabiasz miesięcznie?
               </h2>
-              <p className="text-sm text-gray-500 mb-6">
-                Pamiętaj, by zostawić 10-15% na serwis i przegląd po zakupie
-              </p>
-              <div>
+              <p className="text-gray-600 mb-8">Podaj swoje dochody netto (na rękę)</p>
+              <div className="space-y-4">
                 <input
                   type="number"
-                  value={formData.budget || ''}
-                  onChange={(e) => onUpdate('budget', parseInt(e.target.value) || 0)}
-                  placeholder="Np. 40000"
-                  className="w-full px-6 py-4 text-xl border-2 border-gray-200 rounded-xl 
-                           focus:border-[#b85450] focus:outline-none transition-colors"
+                  value={formData.monthlyIncome || ''}
+                  onChange={(e) => onUpdate('monthlyIncome', parseFloat(e.target.value) || 0)}
+                  placeholder="np. 5000"
+                  className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#b85450] focus:outline-none text-lg"
                 />
-                <p className="text-sm text-gray-400 mt-2">Podaj kwotę w PLN</p>
+                <p className="text-sm text-gray-500">
+                  To pomoże oszacować realistyczny budżet na auto i koszty miesięczne
+                </p>
               </div>
             </div>
           )}
 
+          {/* Step 2: Daily Commute */}
           {currentStep === 2 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Jak reagujesz na niespodziewane wydatki serwisowe?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Jak daleko dojeżdżasz do pracy?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('riskTolerance', 'high')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.riskTolerance === 'high'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Akceptuję ryzyko</p>
-                  <p className="text-sm text-gray-600">
-                    W zamian za lepszą klasę lub wyposażenie
-                  </p>
-                </button>
-                <button
-                  onClick={() => onUpdate('riskTolerance', 'medium')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.riskTolerance === 'medium'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Wolę coś prostszego</p>
-                  <p className="text-sm text-gray-600">
-                    Tanie i przewidywalne w naprawie
-                  </p>
-                </button>
-                <button
-                  onClick={() => onUpdate('riskTolerance', 'low')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.riskTolerance === 'low'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Budżet jest sztywny</p>
-                  <p className="text-sm text-gray-600">
-                    Awaria to dla mnie poważny problem
-                  </p>
-                </button>
+              <p className="text-gray-600 mb-8">Jeden kierunek</p>
+              <div className="space-y-3">
+                {[
+                  { value: 'none', label: 'Nie dojeżdżam / praca zdalna', desc: '0 km' },
+                  { value: 'short', label: 'Blisko', desc: '< 10 km' },
+                  { value: 'medium', label: 'Średnio daleko', desc: '10-40 km' },
+                  { value: 'long', label: 'Daleko', desc: '> 40 km' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('dailyCommute', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.dailyCommute === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 3: Commute Type */}
           {currentStep === 3 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Gdzie będziesz głównie jeździć?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Czym głównie jeździsz do pracy?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('driveLocation', 'city')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.driveLocation === 'city'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Tylko miasto</p>
-                  <p className="text-sm text-gray-600">Krótkie odcinki, korki, parkowanie</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('driveLocation', 'mixed')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.driveLocation === 'mixed'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Mieszane</p>
-                  <p className="text-sm text-gray-600">Miasto + dłuższe trasy</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('driveLocation', 'highway')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.driveLocation === 'highway'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Głównie długie trasy</p>
-                  <p className="text-sm text-gray-600">Autostrady, pokonywanie dużych dystansów</p>
-                </button>
+              <p className="text-gray-600 mb-8">Dominujący typ drogi</p>
+              <div className="space-y-3">
+                {[
+                  { value: 'city', label: 'Miasto', desc: 'Ulice, korki, częste zatrzymywania' },
+                  { value: 'mixed', label: 'Mieszane', desc: 'Część miasto, część trasa' },
+                  { value: 'highway', label: 'Autostrada/Trasa', desc: 'Głównie szybka jazda' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('commuteType', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.commuteType === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 4: Parking at Home */}
           {currentStep === 4 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Ile osób podróżuje na co dzień?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Gdzie parkujesz w domu?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('passengers', 'solo')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.passengers === 'solo'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">1-2 osoby</p>
-                  <p className="text-sm text-gray-600">Ja lub czasem z jednym pasażerem</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('passengers', 'small-family')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.passengers === 'small-family'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Rodzina 2+1 lub 2+2</p>
-                  <p className="text-sm text-gray-600">Potrzebny bagażnik na wózek, zakupy</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('passengers', 'large-family')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.passengers === 'large-family'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Duża rodzina</p>
-                  <p className="text-sm text-gray-600">Częsty przewóz dużych gabarytów, więcej osób</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'garage', label: 'Garaż', desc: 'Zamknięty garaż' },
+                  { value: 'driveway', label: 'Podjazd/Parking strzeżony', desc: 'Własne miejsce' },
+                  { value: 'street', label: 'Ulica', desc: 'Parkowanie na ulicy' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('parkingAtHome', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.parkingAtHome === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 5: Parking at Work */}
           {currentStep === 5 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Co jest dla Ciebie absolutnie najważniejsze?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Gdzie parkujesz w pracy?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('priority', 'economy')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.priority === 'economy'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Niskie koszty</p>
-                  <p className="text-sm text-gray-600">Utrzymanie i spalanie to priorytet</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('priority', 'comfort')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.priority === 'comfort'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Komfort</p>
-                  <p className="text-sm text-gray-600">Cisza i wygoda w trasie</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('priority', 'safety')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.priority === 'safety'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Bezpieczeństwo</p>
-                  <p className="text-sm text-gray-600">Solidność i ochrona</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('priority', 'emotions')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.priority === 'emotions'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Emocje</p>
-                  <p className="text-sm text-gray-600">Wygląd i radość z jazdy</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'none', label: 'Nie dotyczy', desc: 'Nie dojeżdżam do pracy' },
+                  { value: 'parking', label: 'Parking firmowy', desc: 'Duże miejsce' },
+                  { value: 'street', label: 'Ulica', desc: 'Trzeba szukać miejsca' },
+                  { value: 'tight', label: 'Ciasne miejsce', desc: 'Małe miejsca parkingowe' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('parkingAtWork', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.parkingAtWork === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 6: Household Size */}
           {currentStep === 6 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Jaki jest Twój stosunek do motoryzacji?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Ile osób mieszka w Twoim domu?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('carAttitude', 'tool')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.carAttitude === 'tool'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Auto to narzędzie</p>
-                  <p className="text-sm text-gray-600">Jak AGD – ma działać i tyle</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('carAttitude', 'passion')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.carAttitude === 'passion'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Lubię dbać o samochód</p>
-                  <p className="text-sm text-gray-600">To dla mnie coś więcej</p>
-                </button>
-              </div>
+              <p className="text-gray-600 mb-8">Uwzględnij siebie, partnera, dzieci, rodziców</p>
+              <input
+                type="number"
+                min="1"
+                value={formData.householdSize || 1}
+                onChange={(e) => onUpdate('householdSize', parseInt(e.target.value) || 1)}
+                className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#b85450] focus:outline-none text-lg"
+              />
             </div>
           )}
 
+          {/* Step 7: Children Count */}
           {currentStep === 7 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Ile kilometrów przejedziesz rocznie?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Ile masz dzieci?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('annualMileage', 'low')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.annualMileage === 'low'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Poniżej 15 000 km/rok</p>
-                  <p className="text-sm text-gray-600">Głównie weekendy i krótkie trasy</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('annualMileage', 'medium')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.annualMileage === 'medium'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">15 000 - 25 000 km/rok</p>
-                  <p className="text-sm text-gray-600">Codzienny dojazd do pracy, typowe użytkowanie</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('annualMileage', 'high')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.annualMileage === 'high'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Powyżej 25 000 km/rok</p>
-                  <p className="text-sm text-gray-600">Długie trasy, służbowe podróże</p>
-                </button>
-              </div>
+              <p className="text-gray-600 mb-8">Dzieci poniżej 18 lat</p>
+              <input
+                type="number"
+                min="0"
+                value={formData.childrenCount || 0}
+                onChange={(e) => onUpdate('childrenCount', parseInt(e.target.value) || 0)}
+                className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#b85450] focus:outline-none text-lg"
+              />
             </div>
           )}
 
+          {/* Step 8: Elderly Passengers */}
           {currentStep === 8 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Gdzie parkujesz auto na co dzień?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Czy regularnie wozisz osoby starsze?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('parkingType', 'garage')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.parkingType === 'garage'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Garaż lub zadaszenie</p>
-                  <p className="text-sm text-gray-600">Auto jest chronione przed pogodą</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('parkingType', 'street')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.parkingType === 'street'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Ulica/parking otwarty</p>
-                  <p className="text-sm text-gray-600">Auto stoi na zewnątrz</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('parkingType', 'mixed')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.parkingType === 'mixed'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Różnie</p>
-                  <p className="text-sm text-gray-600">W domu garaż, w pracy na zewnątrz</p>
-                </button>
+              <p className="text-gray-600 mb-8">Rodzice, dziadkowie - którym trudniej wsiadać/wysiadać</p>
+              <div className="space-y-3">
+                {[
+                  { value: true, label: 'Tak', desc: 'Ważna łatwość wsiadania' },
+                  { value: false, label: 'Nie', desc: '' }
+                ].map(opt => (
+                  <button
+                    key={opt.value.toString()}
+                    onClick={() => onUpdate('elderlyPassengers', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.elderlyPassengers === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    {opt.desc && <div className="text-sm text-gray-500">{opt.desc}</div>}
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 9: Weekly Groceries */}
           {currentStep === 9 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Jaka jest Twoja wiedza mechaniczna?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Jak duże robisz zakupy tygodniowe?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('mechanicalSkills', 'none')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.mechanicalSkills === 'none'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Żadna</p>
-                  <p className="text-sm text-gray-600">Wszystko zlecam serwisowi</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('mechanicalSkills', 'basic')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.mechanicalSkills === 'basic'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Podstawowa</p>
-                  <p className="text-sm text-gray-600">Potrafię wymienić żarówkę, olej, filtr</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('mechanicalSkills', 'advanced')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.mechanicalSkills === 'advanced'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Zaawansowana</p>
-                  <p className="text-sm text-gray-600">Sam wykonuję większość napraw</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'small', label: 'Małe', desc: '2-3 torby / mały wózek' },
+                  { value: 'medium', label: 'Średnie', desc: '5-7 toreb / pełny wózek' },
+                  { value: 'large', label: 'Duże', desc: '10+ toreb / zakupy dla rodziny na tydzień' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('weeklyGroceries', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.weeklyGroceries === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 10: Sports Equipment */}
           {currentStep === 10 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Gdzie mieszkasz i jeździsz?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Czy przewozisz sprzęt sportowy?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('terrainType', 'flat')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.terrainType === 'flat'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Teren płaski</p>
-                  <p className="text-sm text-gray-600">Niziny, równe drogi</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('terrainType', 'hilly')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.terrainType === 'hilly'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Teren pagórkowaty/górski</p>
-                  <p className="text-sm text-gray-600">Częste podjazdy, serpentyny</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('terrainType', 'mixed')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.terrainType === 'mixed'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Mieszany teren</p>
-                  <p className="text-sm text-gray-600">Różne warunki</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'none', label: 'Nie', desc: 'Nie uprawiam sportów wymagających sprzętu' },
+                  { value: 'small', label: 'Drobny sprzęt', desc: 'Narty, snowboard, kije golfowe' },
+                  { value: 'large', label: 'Duży sprzęt', desc: 'Rowery, kajaki, deski surfingowe' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('sportsEquipment', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.sportsEquipment === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 11: Pet Transport */}
           {currentStep === 11 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Jaki wiek samochodu Cię interesuje?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Czy przewozisz zwierzęta?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('carAge', 'new')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.carAge === 'new'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Do 3 lat</p>
-                  <p className="text-sm text-gray-600">Nowe/prawie nowe, z gwarancją</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('carAge', 'young')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.carAge === 'young'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">3-8 lat</p>
-                  <p className="text-sm text-gray-600">Używane w średnim wieku</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('carAge', 'old')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.carAge === 'old'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Powyżej 8 lat</p>
-                  <p className="text-sm text-gray-600">Starsze, budżetowe</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'none', label: 'Nie mam zwierząt', desc: '' },
+                  { value: 'small', label: 'Małe zwierzę', desc: 'Kot, mały pies (klatka/transporter)' },
+                  { value: 'large', label: 'Duży pies', desc: 'Wymaga dużo miejsca w bagażniku' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('petTransport', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.petTransport === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    {opt.desc && <div className="text-sm text-gray-500">{opt.desc}</div>}
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 12: Stroller Type */}
           {currentStep === 12 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Czy masz preferencje co do producenta?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Czy używasz wózka dziecięcego?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('brandPreference', 'japanese')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.brandPreference === 'japanese'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Japońskie</p>
-                  <p className="text-sm text-gray-600">Toyota, Honda, Mazda, Subaru - niezawodność</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('brandPreference', 'german')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.brandPreference === 'german'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Niemieckie</p>
-                  <p className="text-sm text-gray-600">VW, Audi, BMW, Mercedes - prestiż i jakość</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('brandPreference', 'french')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.brandPreference === 'french'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Francuskie</p>
-                  <p className="text-sm text-gray-600">Renault, Peugeot, Citroën - komfort i styl</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('brandPreference', 'any')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.brandPreference === 'any'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Nie mam preferencji</p>
-                  <p className="text-sm text-gray-600">Interesuje mnie najlepszy stosunek jakości do ceny</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'none', label: 'Nie używam', desc: 'Brak dzieci lub starsze dzieci' },
+                  { value: 'compact', label: 'Kompaktowy wózek', desc: 'Spacerówka - składa się łatwo' },
+                  { value: 'large', label: 'Duży wózek', desc: 'Gondola, wózek głęboki' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('strollerType', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.strollerType === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 13: Long Trips */}
           {currentStep === 13 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Ile miejsca potrzebujesz w bagażniku?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Ile razy rocznie jeździsz na dłuższe trasy?
               </h2>
-              <p className="text-sm text-gray-500 mb-6">
-                Pomyśl o typowych zakupach, walizkach czy sprzęcie sportowym
-              </p>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('trunkNeeds', 'small')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.trunkNeeds === 'small'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Mały (250-350 litrów)</p>
-                  <p className="text-sm text-gray-600">Zakupy dla 1-2 osób, mała walizka kabinowa</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('trunkNeeds', 'medium')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.trunkNeeds === 'medium'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Średni (400-500 litrów)</p>
-                  <p className="text-sm text-gray-600">2 duże walizki, wózek dziecięcy, większe zakupy</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('trunkNeeds', 'large')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.trunkNeeds === 'large'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Duży (550-700 litrów)</p>
-                  <p className="text-sm text-gray-600">3-4 walizki, sprzęt sportowy, meble do złożenia</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('trunkNeeds', 'xl')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.trunkNeeds === 'xl'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Bardzo duży (750+ litrów)</p>
-                  <p className="text-sm text-gray-600">Bagaż dla całej rodziny, duże przedmioty, wyprawy</p>
-                </button>
-              </div>
+              <p className="text-gray-600 mb-8">Trasy powyżej 200 km (wakacje, rodzina, wyjazdy)</p>
+              <input
+                type="number"
+                min="0"
+                value={formData.longTripsPerYear || 0}
+                onChange={(e) => onUpdate('longTripsPerYear', parseInt(e.target.value) || 0)}
+                className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#b85450] focus:outline-none text-lg"
+                placeholder="np. 10"
+              />
             </div>
           )}
 
+          {/* Step 14: Vacation Style */}
           {currentStep === 14 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Jaka skrzynia biegów Cię interesuje?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Jaki masz styl wakacji?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('transmission', 'manual')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.transmission === 'manual'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Manualna</p>
-                  <p className="text-sm text-gray-600">Niższe koszty, lepsza kontrola, tańsza naprawa</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('transmission', 'automatic')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.transmission === 'automatic'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Automatyczna</p>
-                  <p className="text-sm text-gray-600">Wygoda w korkach, komfort jazdy</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('transmission', 'no-preference')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.transmission === 'no-preference'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Bez preferencji</p>
-                  <p className="text-sm text-gray-600">Oba typy mi odpowiadają</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'none', label: 'Nie jeżdżę na wakacje', desc: '' },
+                  { value: 'light', label: 'Lekkie pakowanie', desc: 'Hotel/apartament - minimum bagażu' },
+                  { value: 'family', label: 'Wyjazd rodzinny', desc: 'Walizki dla wszystkich' },
+                  { value: 'camping', label: 'Camping/outdoor', desc: 'Namiot, śpiwory, sprzęt turystyczny' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('vacationStyle', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.vacationStyle === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    {opt.desc && <div className="text-sm text-gray-500">{opt.desc}</div>}
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 15: Winter Conditions */}
           {currentStep === 15 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Czy planujesz holować przyczepę?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Jak wyglądają warunki zimowe tam gdzie mieszkasz?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('towing', 'none')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.towing === 'none'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Nie</p>
-                  <p className="text-sm text-gray-600">Nie potrzebuję holowania</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('towing', 'light')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.towing === 'light'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Lekka przyczepa (do 750 kg)</p>
-                  <p className="text-sm text-gray-600">Mała przyczepa bagażowa, przyczepka rowerowa</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('towing', 'heavy')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.towing === 'heavy'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Ciężka przyczepa (powyżej 750 kg)</p>
-                  <p className="text-sm text-gray-600">Przyczepa kempingowa, łódź, koń mechaniczny</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'none', label: 'Łagodne zimy', desc: 'Rzadko pada śnieg' },
+                  { value: 'mild', label: 'Normalne zimy', desc: 'Czasem śnieg, odśnieżane drogi' },
+                  { value: 'regular', label: 'Śnieżne zimy', desc: 'Regularnie śnieg i lód' },
+                  { value: 'extreme', label: 'Ekstremalne zimy', desc: 'Góry, duże opady, drogi nieodśnieżane' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('winterConditions', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.winterConditions === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 16: Road Type */}
           {currentStep === 16 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Jakie warunki zimowe w Twoim regionie?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Jakimi drogami jeździsz?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('winterConditions', 'mild')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.winterConditions === 'mild'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Łagodne</p>
-                  <p className="text-sm text-gray-600">Rzadkie opady śniegu, głównie deszcz, +5°C do -5°C</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('winterConditions', 'harsh')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.winterConditions === 'harsh'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Ostre</p>
-                  <p className="text-sm text-gray-600">Regularne opady śniegu, oblodzenia, -5°C do -15°C</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('winterConditions', 'extreme')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.winterConditions === 'extreme'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Ekstremalne</p>
-                  <p className="text-sm text-gray-600">Ciężkie warunki, zaspy, poniżej -15°C</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'paved', label: 'Tylko asfalt', desc: 'Miasto i drogi asfaltowe' },
+                  { value: 'occasional-dirt', label: 'Czasem szutry', desc: 'Okazjonalnie drogi gruntowe' },
+                  { value: 'regular-dirt', label: 'Regularnie szutry', desc: 'Często drogi gruntowe, pola, las' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('roadType', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.roadType === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 17: Hilliness */}
           {currentStep === 17 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Jaki rodzaj napędu preferujesz?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Jaki jest teren w okolicy?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('fuelType', 'petrol')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.fuelType === 'petrol'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Benzyna</p>
-                  <p className="text-sm text-gray-600">Prostsza mechanika, tańszy serwis</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('fuelType', 'diesel')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.fuelType === 'diesel'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Diesel</p>
-                  <p className="text-sm text-gray-600">Ekonomiczny na długich trasach</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('fuelType', 'hybrid')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.fuelType === 'hybrid'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Hybryda</p>
-                  <p className="text-sm text-gray-600">Oszczędność w mieście, nowoczesna technologia</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('fuelType', 'electric')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.fuelType === 'electric'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Elektryczny</p>
-                  <p className="text-sm text-gray-600">Zero emisji, niskie koszty eksploatacji</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('fuelType', 'any')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.fuelType === 'any'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Dowolny</p>
-                  <p className="text-sm text-gray-600">Najważniejszy stosunek ceny do możliwości</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'flat', label: 'Płaski', desc: 'Równiny, brak wzniesień' },
+                  { value: 'moderate', label: 'Pagórkowaty', desc: 'Delikatne wzniesienia' },
+                  { value: 'mountainous', label: 'Górzysty', desc: 'Strome podjazdy, góry' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('hilliness', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.hilliness === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 18: Weekend Activities */}
           {currentStep === 18 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Jak ważne są dla Ciebie osiągi?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Co robisz w weekendy?
               </h2>
-              <p className="text-sm text-gray-500 mb-6">
-                Czas rozpędzania od 0 do 100 km/h
-              </p>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('acceleration', 'slow-ok')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.acceleration === 'slow-ok'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Spokojne (&gt;11 sekund)</p>
-                  <p className="text-sm text-gray-600">Ekonomia ważniejsza niż przyspieszanie</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('acceleration', 'moderate')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.acceleration === 'moderate'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Umiarkowane (8-11 sekund)</p>
-                  <p className="text-sm text-gray-600">Wystarczające do pewnego wyprzedzania</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('acceleration', 'fast')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.acceleration === 'fast'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Dynamiczne (&lt;8 sekund)</p>
-                  <p className="text-sm text-gray-600">Chcę mieć mocę i przyjemność z jazdy</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'home', label: 'Głównie w domu', desc: 'Netflix, dom, okolica' },
+                  { value: 'city', label: 'Miasto', desc: 'Restauracje, kino, zakupy' },
+                  { value: 'nature', label: 'Na łonie natury', desc: 'Las, jeziora, góry' },
+                  { value: 'active', label: 'Aktywnie', desc: 'Sport, wycieczki, przygody' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('weekendActivities', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.weekendActivities === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 19: Trailer Needed */}
           {currentStep === 19 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Jakiego prześwitu potrzebujesz?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Czy potrzebujesz holować przyczepę?
               </h2>
-              <p className="text-sm text-gray-500 mb-6">
-                Wysokość nadwozia od podłoża - ważne dla krawężników, polnych dróg
-              </p>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('heightClearance', 'low')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.heightClearance === 'low'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Niski (&lt;150 mm)</p>
-                  <p className="text-sm text-gray-600">Tylko asfaltem, sportowe prowadzenie</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('heightClearance', 'standard')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.heightClearance === 'standard'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Standardowy (150-180 mm)</p>
-                  <p className="text-sm text-gray-600">Normalne drogi, wysoki krawężnik OK</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('heightClearance', 'high')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.heightClearance === 'high'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Wysoki (&gt;180 mm)</p>
-                  <p className="text-sm text-gray-600">Drogi polne, śnieg, tereny trudne</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'never', label: 'Nie', desc: 'Nie planuję holowania' },
+                  { value: 'occasionally', label: 'Czasem', desc: 'Mała przyczepa bagażowa (do 750 kg)' },
+                  { value: 'regularly', label: 'Regularnie', desc: 'Przyczepa kempingowa/łódź (1500+ kg)' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('trailerNeeded', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.trailerNeeded === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
+          {/* Step 20: Main Concern */}
           {currentStep === 20 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-8">
-                Jak długo planujesz użytkować auto?
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Co jest dla Ciebie najważniejsze?
               </h2>
-              <div className="space-y-4">
-                <button
-                  onClick={() => onUpdate('plannedOwnership', 'short')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.plannedOwnership === 'short'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Krótko (do 3 lat)</p>
-                  <p className="text-sm text-gray-600">Planuję wymianę, wartość odsprzedaży ważna</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('plannedOwnership', 'medium')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.plannedOwnership === 'medium'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Średnio (3-7 lat)</p>
-                  <p className="text-sm text-gray-600">Standardowe użytkowanie</p>
-                </button>
-                <button
-                  onClick={() => onUpdate('plannedOwnership', 'long')}
-                  className={`w-full text-left p-6 rounded-xl border-2 transition-all ${
-                    formData.plannedOwnership === 'long'
-                      ? 'border-[#b85450] bg-[#faf5f5]'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-gray-900 mb-2">Długo (ponad 7 lat)</p>
-                  <p className="text-sm text-gray-600">Do końca życia auta, niezawodność kluczowa</p>
-                </button>
+              <div className="space-y-3">
+                {[
+                  { value: 'economy', label: 'Oszczędność', desc: 'Niskie koszty eksploatacji' },
+                  { value: 'reliability', label: 'Niezawodność', desc: 'Mało usterek, wysokie oceny' },
+                  { value: 'comfort', label: 'Komfort', desc: 'Wygoda jazdy i wyposażenie' },
+                  { value: 'space', label: 'Przestronność', desc: 'Dużo miejsca dla rodziny' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('mainConcern', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.mainConcern === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
+
+          {/* Step 21: Mechanical Skills */}
+          {currentStep === 21 && (
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Czy masz umiejętności mechaniczne?
+              </h2>
+              <p className="text-gray-600 mb-8">Czy potrafisz sam naprawiać drobne usterki?</p>
+              <div className="space-y-3">
+                {[
+                  { value: 'none', label: 'Nie, wszystko warsztat', desc: 'Potrzebuję auta niezawodnego' },
+                  { value: 'basic', label: 'Podstawowe', desc: 'Wymiana oleju, filtrów' },
+                  { value: 'advanced', label: 'Zaawansowane', desc: 'Potrafię naprawiać większość rzeczy' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('mechanicalSkills', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.mechanicalSkills === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 22: Planned Ownership */}
+          {currentStep === 22 && (
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Jak długo planujesz używać tego auta?
+              </h2>
+              <div className="space-y-3">
+                {[
+                  { value: 'short', label: '1-3 lata', desc: 'Krótkoterminowo' },
+                  { value: 'medium', label: '3-7 lat', desc: 'Średnioterminowo' },
+                  { value: 'long', label: 'Powyżej 7 lat', desc: 'Na długo' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('plannedOwnership', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.plannedOwnership === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 23: Monthly Payment */}
+          {currentStep === 23 && (
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Ile maksymalnie możesz płacić miesięcznie?
+              </h2>
+              <p className="text-gray-600 mb-8">Tylko rata kredytu/leasingu (jeśli planujesz finansowanie)</p>
+              <input
+                type="number"
+                value={formData.maxMonthlyPayment || ''}
+                onChange={(e) => onUpdate('maxMonthlyPayment', parseInt(e.target.value) || null)}
+                className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#b85450] focus:outline-none text-lg"
+                placeholder="np. 1500 (zostaw puste jeśli kupujesz za gotówkę)"
+              />
+              <p className="text-sm text-gray-500 mt-4">
+                Możesz pominąć jeśli planujesz zakup za gotówkę - użyjemy Twojego miesięcznego dochodu
+              </p>
+            </div>
+          )}
+
+          {/* Step 24: Child Seats */}
+          {currentStep === 24 && (
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Ile fotelików dziecięcych potrzebujesz?
+              </h2>
+              <p className="text-gray-600 mb-8">Ważne dla mocowań ISOFIX</p>
+              <input
+                type="number"
+                min="0"
+                max="3"
+                value={formData.childSeats || 0}
+                onChange={(e) => onUpdate('childSeats', parseInt(e.target.value) || 0)}
+                className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#b85450] focus:outline-none text-lg"
+              />
+              <p className="text-sm text-gray-500 mt-4">
+                Większość aut ma 2 mocowania ISOFIX w tylnej kanapie
+              </p>
+            </div>
+          )}
+
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={onBack}
-            disabled={currentStep === 1}
-            className={`px-6 py-3 rounded-xl font-medium transition-all ${
-              currentStep === 1
-                ? 'text-gray-400 cursor-not-allowed'
-                : 'text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            ← Wstecz
-          </button>
+        {/* Navigation */}
+        <div className="flex gap-4">
+          {currentStep > 1 && (
+            <button
+              onClick={onBack}
+              className="px-8 py-3 border-2 border-gray-200 text-gray-700 rounded-full hover:border-gray-300 transition-colors font-light"
+            >
+              Wstecz
+            </button>
+          )}
           <button
             onClick={handleNext}
-            disabled={!canProceed()}
-            className={`px-8 py-3 rounded-xl font-medium transition-all ${
-              canProceed()
-                ? 'bg-[#b85450] text-white hover:bg-[#a04946] shadow-sm'
+            disabled={!isCurrentStepValid()}
+            className={`flex-1 px-8 py-3 rounded-full font-light transition-all ${
+              isCurrentStepValid()
+                ? 'bg-[#b85450] text-white hover:bg-[#a04946]'
                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             }`}
           >
-            {currentStep === totalSteps ? 'Zobacz rekomendację' : 'Dalej →'}
+            {currentStep === totalSteps ? 'Zobacz wyniki' : 'Dalej'}
           </button>
         </div>
       </div>

@@ -4,35 +4,43 @@ import { useState } from 'react';
 import Hero from './components/Hero';
 import Wizard from './components/Wizard';
 import Results from './components/Results';
-import { FormData, Recommendation } from './types';
+import { FormData, Recommendation, CalculatedRequirements, CarOffer } from './types';
 import { generateRecommendation } from './utils/recommendations';
+import { calculateRequirements } from './utils/calculator';
+import { searchOtomoto } from './utils/otomoto-api';
 
 export default function Home() {
   const [screen, setScreen] = useState<'hero' | 'wizard' | 'results'>('hero');
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<FormData>({
-    budget: 0,
-    riskTolerance: null,
-    driveLocation: null,
-    passengers: null,
-    priority: null,
-    carAttitude: null,
-    annualMileage: null,
-    parkingType: null,
-    mechanicalSkills: null,
-    terrainType: null,
-    carAge: null,
-    brandPreference: null,
-    trunkNeeds: null,
-    transmission: null,
-    towing: null,
+    monthlyIncome: 0,
+    maxMonthlyPayment: null,
+    dailyCommute: null,
+    commuteType: null,
+    parkingAtWork: null,
+    parkingAtHome: null,
+    householdSize: 1,
+    childrenCount: 0,
+    childSeats: 0,
+    elderlyPassengers: false,
+    weeklyGroceries: null,
+    sportsEquipment: null,
+    petTransport: null,
+    strollerType: null,
+    longTripsPerYear: 0,
+    vacationStyle: null,
     winterConditions: null,
-    fuelType: null,
-    acceleration: null,
-    heightClearance: null,
+    roadType: null,
+    hilliness: null,
+    weekendActivities: null,
+    trailerNeeded: null,
+    mainConcern: null,
+    mechanicalSkills: null,
     plannedOwnership: null
   });
   const [recommendation, setRecommendation] = useState<Recommendation[] | null>(null);
+  const [requirements, setRequirements] = useState<CalculatedRequirements | null>(null);
+  const [offers, setOffers] = useState<CarOffer[]>([]);
 
   const handleStart = () => {
     setScreen('wizard');
@@ -53,33 +61,45 @@ export default function Home() {
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    const calculatedReqs = calculateRequirements(formData);
+    setRequirements(calculatedReqs);
     const result = generateRecommendation(formData);
     setRecommendation(result);
+    
+    // Pobieramy oferty z Otomoto
+    const budget = calculatedReqs.recommendedBudget || formData.monthlyIncome * 10 || 50000;
+    const otomotoOffers = await searchOtomoto(calculatedReqs, budget);
+    setOffers(otomotoOffers);
+    
     setScreen('results');
   };
 
   const handleRestart = () => {
     setFormData({
-      budget: 0,
-      riskTolerance: null,
-      driveLocation: null,
-      passengers: null,
-      priority: null,
-      carAttitude: null,
-      annualMileage: null,
-      parkingType: null,
-      mechanicalSkills: null,
-      terrainType: null,
-      carAge: null,
-      brandPreference: null,
-      trunkNeeds: null,
-      transmission: null,
-      towing: null,
+      monthlyIncome: 0,
+      maxMonthlyPayment: null,
+      dailyCommute: null,
+      commuteType: null,
+      parkingAtWork: null,
+      parkingAtHome: null,
+      householdSize: 1,
+      childrenCount: 0,
+      childSeats: 0,
+      elderlyPassengers: false,
+      weeklyGroceries: null,
+      sportsEquipment: null,
+      petTransport: null,
+      strollerType: null,
+      longTripsPerYear: 0,
+      vacationStyle: null,
       winterConditions: null,
-      fuelType: null,
-      acceleration: null,
-      heightClearance: null,
+      roadType: null,
+      hilliness: null,
+      weekendActivities: null,
+      trailerNeeded: null,
+      mainConcern: null,
+      mechanicalSkills: null,
       plannedOwnership: null
     });
     setCurrentStep(1);
@@ -119,8 +139,13 @@ export default function Home() {
           />
         )}
         
-        {screen === 'results' && recommendation && (
-          <Results recommendations={recommendation} onRestart={handleRestart} />
+        {screen === 'results' && recommendation && requirements && (
+          <Results 
+            recommendations={recommendation} 
+            requirements={requirements}
+            offers={offers}
+            onRestart={handleRestart} 
+          />
         )}
       </main>
 
