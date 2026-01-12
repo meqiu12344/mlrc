@@ -6,7 +6,9 @@ export function calculateRequirements(data: FormData): CalculatedRequirements {
     power: "",
     budget: "",
     segment: "",
-    features: [] as string[]
+    features: [] as string[],
+    fuelType: "",
+    bodyStyle: ""
   };
 
   // === BAGAŻNIK ===
@@ -189,6 +191,23 @@ export function calculateRequirements(data: FormData): CalculatedRequirements {
     maxFuelConsumption = 7.5;
   }
 
+  // === TYP PALIWA ===
+  let recommendedFuelType = 'Benzyna';
+  
+  // Diesellogika dla wysokiego kilometrażu
+  if (monthlyKm > 1500) {
+    recommendedFuelType = 'Diesel';
+    reasoning.fuelType = `Wysokie kilometry (${Math.round(monthlyKm)} km/mies.) wskazują na diesel - niższe spalanie (6-7 L/100km) i niższy koszt paliwa. `;
+  } else if (monthlyKm > 800 && data.mainConcern !== 'economy') {
+    recommendedFuelType = 'Diesel';
+    reasoning.fuelType = `Średnie kilometry (${Math.round(monthlyKm)} km/mies.) - diesel jest ekonomiczniejszy długoterminowo. `;
+  } else if (monthlyKm > 2000 && recBudget > 120000) {
+    recommendedFuelType = 'Hybrid';
+    reasoning.fuelType = `Bardzo wysokie kilometry (${Math.round(monthlyKm)} km/mies.) i wyższy budżet - hybrydaofertuje najniższe spalanie (5-6 L/100km). `;
+  } else {
+    reasoning.fuelType = `Umiarkowany kilometraż (${Math.round(monthlyKm)} km/mies.) - benzyna wystarczająca i tańsza w kupnie. `;
+  }
+
   // === SEGMENT I NADWOZIE ===
   const segments: string[] = [];
   const bodyStyles: string[] = [];
@@ -218,7 +237,15 @@ export function calculateRequirements(data: FormData): CalculatedRequirements {
     }
   }
 
-  // === PROCENT JAZDY MIEJSKIEJ ===
+  // Przypisz najrekomendowansze nadwozie
+  reasoning.bodyStyle = bodyStyles.length > 0 
+    ? `Rekomendowane nadwozia: ${bodyStyles.join(', ')}. ${
+        trunkRec > 600 ? 'Duża pojemność wymaga Vana, Kombi lub dużego SUV-a. ' :
+        trunkRec > 450 ? 'Średnie zapotrzebowanie wymaga kompaktu, Kombi lub SUV-a. ' :
+        'Mały bagażnik pozwala na kompaktowe hatchbacki. '
+      }${awd4x4 ? 'Napęd 4x4 preferuje SUV-y. ' : ''}`
+    : '';
+
   let cityPercent = 50;
   if (data.commuteType === 'city') cityPercent = 80;
   else if (data.commuteType === 'highway') cityPercent = 20;
@@ -251,30 +278,133 @@ export function calculateRequirements(data: FormData): CalculatedRequirements {
 
   const winterTires = data.winterConditions !== 'none' && data.winterConditions !== null;
 
-  return {
+  const result = {
+    // Wymiary i przestrzeń
     minTrunkCapacity: trunkMin,
     recommendedTrunkCapacity: trunkRec,
     minSeats,
     thirdRowNeeded,
     
+    // Osiągi i silnik
     minPower,
+    recommendedPower: Math.max(minPower, Math.round(minPower * 1.3)), // +30% do minimum
+    optimalEngineSize: minPower > 150 ? 2000 : minPower > 120 ? 1600 : minPower > 100 ? 1400 : 1200,
+    engineSizeReasoning: minPower > 150 ? "Duża moc wymaga pojemnego silnika (~2.0L)" : minPower > 120 ? "Średnia moc wymaga ~1.6L" : "Mniejsza pojemność wystarczająca",
     maxAcceleration: maxAccel,
     cityDriving: cityPercent,
     
+    // Możliwości
     towingCapacity,
     minGroundClearance: minClearance,
     awd4x4Needed: awd4x4,
     
+    // Ekonomia
     maxBudget,
     recommendedBudget: recBudget,
     maxMonthlyCost: Math.round(maxMonthlyCost),
     maxFuelConsumption,
     
+    // REKOMENDACJE
+    recommendedFuelType,
+    fuelTypeReasoning: reasoning.fuelType,
+    recommendedBodyStyle: bodyStyles[0] || "Sedan",
+    bodyStyleReasoning: reasoning.bodyStyle,
+    
+    // Inne
     winterTiresNeeded: winterTires,
     reliabilityPriority,
     recommendedSegments: segments,
     recommendedBodyStyles: bodyStyles,
+    preferredFuelTypes: recommendedFuelType === 'Diesel' ? ['diesel', 'benzyna'] : recommendedFuelType === 'Hybrid' ? ['hybrid', 'diesel'] : ['benzyna', 'diesel'],
+    olxSearchRegion: data.olxRegion || "",
     
-    reasoning
+    // Uzasadnienia
+    reasoning,
+    
+    // Koszty roczne
+    estimatedAnnualCosts: {
+      fuel: Math.round(monthlyKm * 12 / 100 * 7 * 6.5),
+      insurance: 200 * 12,
+      maintenance: 100 * 12,
+      repairs: 50 * 12,
+      total: 0 // Wyliczone poniżej
+    },
+    
+    // Specyfika użytkowania
+    usageProfile: {
+      primaryUse: thirdRowNeeded ? "Rodzina" : awd4x4 ? "Aktywny styl" : "Codzienna jazda",
+      drivingPattern: cityPercent > 70 ? "Głównie miasto" : cityPercent < 30 ? "Głównie droga" : "Mieszane",
+      annualMileage: Math.round(monthlyKm * 12),
+      dailyUsage: `${Math.round(dailyKm)} km dziennie`
+    },
+    
+    // Bezpieczeństwo
+    safetyRequirements: data.childrenCount > 0 ? ["ISOFIX", "Poduszki powietrzne"] : ["ABS", "ESP"],
+    recommendedSafetyFeatures: ["ABS", "ESP", "ASR", "Poduszki powietrzne (min. 6)"],
+    
+    // Komfort
+    comfortFeatures: ["Klimatyzacja", "Podgrzewane przednie siedzenia"],
+    
+    // Rodzina
+    familyNeeds: data.childrenCount > 0 ? {
+      childSeatCompatibility: `ISOFIX na ${Math.min(data.childSeats, 3)} miejscach`,
+      rearDoorWidth: "Min. 70cm dla wygodnego zainstalowania fotelika",
+      rearLegroom: "Min. 700mm dla komfortu dzieci"
+    } : undefined,
+    
+    // Aktywności
+    activityRecommendations: 
+      data.sportsEquipment === 'large' ? ["Relingi dachowe", "Box dachowy"] :
+      awd4x4 ? ["Napęd 4x4", "Zwiększony prześwit"] : [],
+    
+    // Niezawodność
+    reliabilityInfo: {
+      recommendedBrands: ["Toyota", "Honda", "Mazda", "Volkswagen"],
+      partsAvailability: recBudget > 100000 ? "Łatwo dostępne" : "Średnio dostępne",
+      serviceNetworkSize: "Duża"
+    },
+    
+    // Opony
+    tireRecommendations: {
+      seasonalTires: true,
+      allSeasonTires: data.winterConditions === 'none' || data.winterConditions === null,
+      winterTiresRequired: data.winterConditions !== 'none' && data.winterConditions !== null,
+      recommendedSize: "205/55R16"
+    },
+    
+    // Akcesoria
+    recommendedAccessories: [
+      ...(data.childrenCount > 0 ? ["Ochraniacz fotela"] : []),
+      ...(awd4x4 ? ["Lina holownicza"] : []),
+      "Maskownica - przód",
+      "Dywaniki"
+    ],
+    
+    // Konkurencja
+    competitorModels: ["Volkswagen Golf", "Toyota Corolla", "Mazda3", "Ford Focus"],
+    
+    // Ekologia
+    environmentalInfo: {
+      co2Emissions: Math.round(maxFuelConsumption * 23.2), // 1L benzyny = ~23.2kg CO2
+      euStandard: "Euro 6d",
+      pollutantLevel: recommendedFuelType === 'Hybrid' ? "Nisko" : recommendedFuelType === 'Diesel' ? "Średnio" : "Średnio"
+    },
+    
+    // Rekomendacje lifestyle'u
+    lifestyleRecommendations: [
+      ...reasoning.features,
+      monthlyKm > 1500 ? "Wysokie kilometry - przeanalizuj koszt długoterminowy" : "",
+      thirdRowNeeded ? "Rodzina powinna rozważyć vana lub dużego SUV-a" : "",
+      awd4x4 ? "Aktywny styl życia wymaga dobrej drażliwości terenowej" : ""
+    ].filter(r => r !== "")
   };
-}
+  
+  // Wylicz całkowite koszty
+  result.estimatedAnnualCosts.total = 
+    result.estimatedAnnualCosts.fuel + 
+    result.estimatedAnnualCosts.insurance + 
+    result.estimatedAnnualCosts.maintenance + 
+    result.estimatedAnnualCosts.repairs;
+  
+  return result;
+};
