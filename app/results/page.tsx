@@ -13,6 +13,7 @@ export default function ResultsPage() {
   const { user } = useAuth();
   const { requirements, offers, resetForm, setFormData, setRequirements, setOffers } = useFormContext();
   const [isLoading, setIsLoading] = useState(true);
+  const [disableAutoSave, setDisableAutoSave] = useState(false);
 
   useEffect(() => {
     // Sprawdź czy użytkownik jest zalogowany
@@ -21,27 +22,36 @@ export default function ResultsPage() {
       return;
     }
 
-    // Sprawdź czy jest raport do wyświetlenia w sessionStorage
+    // NAJPIERW sprawdź czy jest raport w sessionStorage
     const viewingReportStr = sessionStorage.getItem('viewingReport');
     
     if (viewingReportStr) {
       try {
+        console.log('Ładowanie raportu z sessionStorage...');
         const savedReport: SavedReport = JSON.parse(viewingReportStr);
         setFormData(savedReport.formData);
         setRequirements(savedReport.requirements);
-        setOffers(savedReport.offers);
+        // Otwieramy istniejący raport – włącz tryb tylko-do-odczytu (bez autozapisu)
+        setDisableAutoSave(true);
+        // Offers są generowane na żywo, nie przechowujemy ich
         sessionStorage.removeItem('viewingReport');
+        console.log('Raport załadowany z sessionStorage');
         setIsLoading(false);
       } catch (error) {
         console.error('Błąd ładowania raportu:', error);
+        sessionStorage.removeItem('viewingReport');
         router.push('/');
       }
     } else if (!requirements) {
+      // Brak danych - kieruj na home
+      console.log('Brak danych raportu, kierowanie na home');
       router.push('/');
     } else {
+      // Mamy requirements z kontekstu (przeszliśmy przez kreator)
+      console.log('Dane z kontekstu dostępne');
       setIsLoading(false);
     }
-  }, [requirements, router, user, setFormData, setRequirements, setOffers]);
+  }, [user, router, setFormData, setRequirements]);
 
   // Jeśli brakuje danych, pokaż loading
   if (isLoading || !requirements) {
@@ -77,6 +87,7 @@ export default function ResultsPage() {
           requirements={requirements}
           offers={offers}
           onRestart={handleRestart}
+          disableAutoSave={disableAutoSave}
         />
       </main>
     </div>

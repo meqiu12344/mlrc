@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚗 MLRC - Inteligentny Doradca Zakupu Samochodu
 
-## Getting Started
+Aplikacja webowa pomagająca użytkownikom znaleźć idealne auto na podstawie ich codziennych potrzeb i stylu życia.
 
-First, run the development server:
+## ✨ Funkcje
+
+- 🎯 **Inteligentny Kreator** - zadaje pytania o codzienne potrzeby zamiast parametrów technicznych
+- 🔥 **Firebase Authentication** - bezpieczne konta użytkowników z hashowaniem haseł
+- 💾 **Automatyczne Zapisywanie** - raporty zapisują się automatycznie na profilu użytkownika
+- 📊 **Szczegółowa Analiza** - kompleksowe wymagania techniczne i rekomendacje
+- 👤 **Profil Użytkownika** - zarządzanie zapisanymi raportami
+- 💳 **Integracja Stripe** - płatności za funkcje premium (opcjonalne)
+
+## 🚀 Szybki Start
+
+### 1. Instalacja
+
+```bash
+npm install
+```
+
+### 2. Konfiguracja Firebase
+
+**WAŻNE**: Musisz skonfigurować Firebase przed uruchomieniem aplikacji!
+
+1. Przeczytaj szczegółową instrukcję: **[FIREBASE_SETUP.md](./FIREBASE_SETUP.md)**
+2. Utwórz projekt Firebase
+3. Skopiuj `.env.local.example` do `.env.local`
+4. Uzupełnij dane Firebase w `.env.local`
+
+```bash
+cp .env.local.example .env.local
+# Edytuj .env.local i dodaj swoje klucze Firebase
+```
+
+### 3. Uruchomienie
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Otwórz [http://localhost:3000](http://localhost:3000) w przeglądarce.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📁 Struktura Projektu
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+├── components/       # Komponenty React (Header, Footer, Results, itd.)
+├── context/          # Context API (AuthContext, FormContext)
+├── lib/              # Konfiguracja Firebase i inne biblioteki
+├── utils/            # Funkcje pomocnicze (calculator, recommendations)
+├── wizard/           # Kreator pytań
+├── results/          # Strona wyników
+├── profile/          # Profil użytkownika
+└── api/              # API routes (Stripe webhooks)
+```
 
-## Learn More
+## 🔐 Bezpieczeństwo
 
-To learn more about Next.js, take a look at the following resources:
+- ✅ Hasła **automatycznie hashowane** przez Firebase Authentication
+- ✅ Reguły Firestore chronią dane użytkowników
+- ✅ Tylko właściciel ma dostęp do swoich raportów
+- ✅ `.env.local` w `.gitignore` - klucze nie są commitowane
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📚 Dokumentacja
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **[FIREBASE_SETUP.md](./FIREBASE_SETUP.md)** - Pełna instrukcja konfiguracji Firebase
+- **[QUICK_START.md](./QUICK_START.md)** - Szybki start dla developerów
+- **[AUTH_SYSTEM_README.md](./AUTH_SYSTEM_README.md)** - System autentykacji
+- **[STRIPE_INTEGRATION.md](./STRIPE_INTEGRATION.md)** - Integracja płatności
 
-## Deploy on Vercel
+## 🛠️ Technologie
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Next.js 16** (Turbopack) - React framework
+- **TypeScript** - Statyczne typowanie
+- **Tailwind CSS** - Stylowanie
+- **Firebase** - Authentication + Firestore Database
+- **Stripe** - Płatności (opcjonalne)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📝 Licencja
+
+MIT
+
+---
+
+**Instrukcje szczegółowe znajdziesz w [FIREBASE_SETUP.md](./FIREBASE_SETUP.md)**

@@ -1,144 +1,338 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { CalculatedRequirements, CarOffer } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useFormContext } from '../context/FormContext';
+ 
 
 interface ResultsProps {
   requirements: CalculatedRequirements;
   offers: CarOffer[];
   onRestart: () => void;
+  disableAutoSave?: boolean;
 }
 
-export default function Results({ requirements, offers, onRestart }: ResultsProps) {
+export default function Results({ requirements, offers, onRestart, disableAutoSave = false }: ResultsProps) {
   const [reportSaved, setReportSaved] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const { user, saveReport } = useAuth();
   const { formData } = useFormContext();
-
-  const handleSaveReport = async () => {
-    if (!user) {
-      alert('Musisz być zalogowany, aby zapisać raport');
-      return;
-    }
-
+ 
+  useEffect(() => {
     try {
-      await saveReport({
-        isPaid: true,
-        formData,
-        requirements,
-        offers,
-        title: `Raport z ${new Date().toLocaleDateString('pl-PL')}`,
-      });
-      setReportSaved(true);
-      alert('Raport został zapisany w Twoim profilu!');
-    } catch (error: any) {
-      alert(error.message || 'Wystąpił błąd podczas zapisywania raportu');
+      const unlocked = typeof window !== 'undefined' && localStorage.getItem('mlrc_premium_access') === 'true';
+      setHasAccess(Boolean(unlocked));
+    } catch (e) {
+      console.error('Nie udało się odczytać statusu dostępu', e);
+    }
+  }, []);
+
+  const startCheckout = async () => {
+    setCheckoutLoading(true);
+    setCheckoutError(null);
+    try {
+      const res = await fetch('/api/create-checkout-session', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error || 'Brak adresu płatności');
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('Błąd płatności', error);
+      setCheckoutError('Nie udało się uruchomić płatności. Spróbuj ponownie.');
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
+  const Paywall = ({ children }: { children: ReactNode }) => (
+    <div className="relative">
+      <div className={hasAccess ? '' : 'blur-sm pointer-events-none select-none'}>{children}</div>
+      {!hasAccess && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="bg-white/95 backdrop-blur-md border border-indigo-200 shadow-2xl rounded-2xl p-6 max-w-md text-center space-y-3">
+            <h3 className="text-xl font-bold text-gray-900">Odblokuj pełny raport</h3>
+            <p className="text-gray-600 text-sm">Za 10 € zobaczysz wszystkie sekcje, analizy i rekomendacje.</p>
+            {checkoutError && <p className="text-sm text-rose-600">{checkoutError}</p>}
+            <button
+              onClick={startCheckout}
+              disabled={checkoutLoading}
+              className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:from-indigo-700 hover:to-purple-700 transition disabled:opacity-60"
+            >
+              {checkoutLoading ? 'Łączenie z płatnością...' : 'Odblokuj za 10 €'}
+            </button>
+            <p className="text-xs text-gray-500">Bez zakładania subskrypcji. Jednorazowa płatność.</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+
+  // Automatyczne zapisywanie raportu dla zalogowanych użytkowników
+  useEffect(() => {
+    const autoSaveReport = async () => {
+      if (user && !reportSaved && !autoSaving && !disableAutoSave) {
+        setAutoSaving(true);
+        try {
+          console.log('Rozpoczynam automatyczne zapisywanie raportu...');
+          await saveReport({
+            formData,
+            requirements,
+            name: `Raport z ${new Date().toLocaleDateString('pl-PL', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })}`,
+          });
+          console.log('Raport zapisany pomyślnie!');
+          setReportSaved(true);
+        } catch (error: any) {
+          console.error('Błąd automatycznego zapisywania:', error);
+          console.error('Szczegóły błędu:', error.message);
+          // Nie pokazujemy alertu dla automatycznego zapisu - nie przerywamy UX
+        } finally {
+          setAutoSaving(false);
+        }
+      }
+    };
+
+    autoSaveReport();
+  }, [user, reportSaved, autoSaving, formData, requirements, saveReport, disableAutoSave]);
+
+  const handleSaveReport = async () => {
+    if (!user) return;
+    
+    setAutoSaving(true);
+    try {
+      await saveReport({
+        formData,
+        requirements,
+        name: `Raport z ${new Date().toLocaleDateString('pl-PL', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}`,
+      });
+      setReportSaved(true);
+      alert('Raport zapisany pomyślnie!');
+    } catch (error: any) {
+      console.error('Błąd zapisywania:', error);
+      alert('Wystąpił błąd podczas zapisywania raportu.');
+    } finally {
+      setAutoSaving(false);
+    }
+  };
+
+  const calculateMatchPercentage = (offer: any, requirements: CalculatedRequirements): number => {
+    let matches = 0;
+    let totalChecks = 0;
+
+    // Sprawdzenie ceny
+    totalChecks++;
+    if (offer.price >= requirements.recommendedBudget * 0.8 && offer.price <= requirements.recommendedBudget * 1.2) {
+      matches += 1;
+    } else if (offer.price >= requirements.recommendedBudget * 0.6 && offer.price <= requirements.recommendedBudget * 1.4) {
+      matches += 0.7;
+    }
+
+    // Sprawdzenie mocy
+    totalChecks++;
+    if (offer.power >= requirements.minPower) {
+      matches += 1;
+    } else if (offer.power >= requirements.minPower * 0.85) {
+      matches += 0.6;
+    }
+
+    // Sprawdzenie paliwa
+    totalChecks++;
+    if (offer.fuel.toLowerCase().includes(requirements.recommendedFuelType.toLowerCase())) {
+      matches += 1;
+    } else {
+      matches += 0.3;
+    }
+
+    // Sprawdzenie roku
+    totalChecks++;
+    const carAge = new Date().getFullYear() - offer.year;
+    if (carAge <= 5) {
+      matches += 1;
+    } else if (carAge <= 10) {
+      matches += 0.7;
+    } else {
+      matches += 0.3;
+    }
+
+    // Sprawdzenie przebiegu
+    totalChecks++;
+    const avgMileagePerYear = 10000;
+    const expectedMileage = carAge * avgMileagePerYear;
+    if (offer.mileage <= expectedMileage * 1.2) {
+      matches += 1;
+    } else if (offer.mileage <= expectedMileage * 1.5) {
+      matches += 0.7;
+    } else {
+      matches += 0.3;
+    }
+
+    const percentage = Math.round((matches / totalChecks) * 100);
+    return Math.min(100, percentage);
+  };
+
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-6xl mx-auto px-6 py-20">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-20 -left-20 w-48 h-48 sm:w-72 sm:h-72 lg:w-96 lg:h-96 bg-gradient-to-br from-blue-400/20 to-indigo-500/20 blur-3xl rounded-full animate-pulse" />
+        <div className="absolute top-10 -right-10 w-40 h-40 sm:w-64 sm:h-64 lg:w-80 lg:h-80 bg-gradient-to-br from-amber-400/20 to-orange-500/20 blur-3xl rounded-full animate-pulse" style={{animationDelay: '1s'}} />
+        <div className="absolute -bottom-20 left-1/4 w-48 h-48 sm:w-72 sm:h-72 lg:w-96 lg:h-96 bg-gradient-to-br from-rose-400/20 to-pink-500/20 blur-3xl rounded-full animate-pulse" style={{animationDelay: '2s'}} />
+        <div className="hidden lg:block absolute top-1/2 right-1/4 w-64 h-64 bg-gradient-to-br from-teal-400/20 to-cyan-500/20 blur-3xl rounded-full animate-pulse" style={{animationDelay: '3s'}} />
+      </div>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-12 md:py-16 relative">
         {/* Header */}
-        <div className="text-center mb-16">
-          <div className="inline-block p-4 bg-[#faf5f5] rounded-full mb-6">
-            <svg className="w-12 h-12 text-[#b85450]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+        <div className="text-center mb-8 sm:mb-12 md:mb-16 lg:mb-20 bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 shadow-2xl border border-white/50">
+          <div className="inline-flex p-3 sm:p-4 md:p-5 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl sm:rounded-2xl mb-4 sm:mb-6 md:mb-8 shadow-lg shadow-indigo-500/30 transform hover:scale-110 transition-transform duration-300">
+            <svg className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-4xl md:text-5xl font-light text-gray-900 mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4 sm:mb-6">
             Twoje Idealne Auto
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto font-medium px-2">
             Przeanalizowaliśmy Twoje codzienne potrzeby i wyliczyliśmy optymalne parametry
           </p>
 
-          {/* Save Report Button */}
-          {user && !reportSaved && (
-            <div className="mt-6">
+          {/* Auto-saved notification */}
+          {user && reportSaved && (
+            <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-green-50 border border-green-200 text-green-700 rounded-lg font-medium">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              Raport automatycznie zapisany w Twoim profilu
+            </div>
+          )}
+          {user && autoSaving && (
+            <div className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg font-medium">
+              <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Zapisywanie raportu...
+            </div>
+          )}
+          {!user && (
+            <div className="mt-6 inline-block px-6 py-3 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg font-medium">
+              💡 Zaloguj się, aby automatycznie zapisywać raporty
+            </div>
+          )}
+
+          {/* Manual Save Button (backup) */}
+          {user && !reportSaved && !autoSaving && (
+            <div className="mt-4">
               <button
                 onClick={() => handleSaveReport()}
                 className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
               >
-                💾 Zapisz raport w profilu
+                💾 Zapisz raport ponownie
               </button>
-            </div>
-          )}
-          {reportSaved && (
-            <div className="mt-6 inline-block px-6 py-3 bg-green-100 text-green-700 rounded-lg font-medium">
-              ✓ Raport zapisany w profilu
             </div>
           )}
         </div>
 
         {/* KOMPLEKSOWA ANALIZA - JEDEN KONTENER */}
-        <div className="bg-gradient-to-br from-[#faf5f5] via-white to-blue-50 rounded-3xl p-8 md:p-12 mb-8 border-2 border-[#b85450] shadow-lg">
+        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl lg:rounded-[32px] p-4 sm:p-6 md:p-10 lg:p-16 mb-6 sm:mb-8 md:mb-12 border border-white/50 shadow-2xl shadow-indigo-500/10 hover:shadow-indigo-500/20 transition-shadow duration-500">
           {/* SEKCJA 1: Rekomendacje Algorytmu */}
-          <div className="mb-10">
-            <h2 className="text-3xl font-light text-gray-900 mb-6 flex items-center gap-3">
-              <svg className="w-8 h-8 text-[#b85450]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              <span>Inteligentne Rekomendacje</span>
-            </h2>
+          <div className="mb-6 sm:mb-8 md:mb-12">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8">
+              <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg sm:rounded-xl shadow-lg shadow-amber-500/30 flex-shrink-0">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                Inteligentne Rekomendacje
+              </h2>
+            </div>
 
-            <div className="grid md:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 mb-4 sm:mb-6">
               {/* Pojemność silnika */}
               {requirements.optimalEngineSize && (
-                <div className="bg-white p-6 rounded-xl border-2 border-[#b85450] shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-3xl">🔧</span>
-                    <div className="text-xs text-gray-500 uppercase tracking-wide">Silnik</div>
+                <div className="group relative bg-gradient-to-br from-rose-50 to-pink-50 p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border-2 border-rose-300 shadow-lg hover:shadow-2xl hover:shadow-rose-500/20 transition-all duration-300 hover:scale-105">
+                  <div className="absolute top-0 right-0 w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br from-rose-400/10 to-transparent rounded-full blur-2xl" />
+                  <div className="relative">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <div className="p-1.5 sm:p-2 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg shadow-md">
+                        <span className="text-xl sm:text-2xl">🔧</span>
+                      </div>
+                      <div className="text-xs text-rose-700 font-bold uppercase tracking-wider">Silnik</div>
+                    </div>
+                    <div className="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                      {(requirements.optimalEngineSize / 1000).toFixed(1)}
+                    </div>
+                    <div className="text-xs sm:text-sm text-rose-700 font-semibold mb-3 sm:mb-4">
+                      {requirements.optimalEngineSize}cc • {requirements.recommendedPower} KM
+                    </div>
+                    <p className="text-xs text-gray-700 leading-relaxed">
+                      {requirements.engineSizeReasoning}
+                    </p>
                   </div>
-                  <div className="text-4xl font-bold text-[#b85450] mb-1">
-                    {(requirements.optimalEngineSize / 1000).toFixed(1)}
-                  </div>
-                  <div className="text-sm text-gray-600 mb-3">
-                    {requirements.optimalEngineSize}cc • {requirements.recommendedPower} KM
-                  </div>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    {requirements.engineSizeReasoning}
-                  </p>
                 </div>
               )}
 
               {/* Rodzaj paliwa */}
               {requirements.recommendedFuelType && (
-                <div className="bg-white p-6 rounded-xl border-2 border-blue-400 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-3xl">⛽</span>
-                    <div className="text-xs text-gray-500 uppercase tracking-wide">Paliwo</div>
+                <div className="group relative bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border-2 border-blue-300 shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 hover:scale-105">
+                  <div className="absolute top-0 right-0 w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br from-blue-400/10 to-transparent rounded-full blur-2xl" />
+                  <div className="relative">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-md">
+                        <span className="text-xl sm:text-2xl">⛽</span>
+                      </div>
+                      <div className="text-xs text-blue-700 font-bold uppercase tracking-wider">Paliwo</div>
+                    </div>
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3 sm:mb-4">
+                      {requirements.recommendedFuelType}
+                    </div>
+                    <p className="text-xs text-gray-700 leading-relaxed">
+                      {requirements.fuelTypeReasoning}
+                    </p>
                   </div>
-                  <div className="text-3xl font-bold text-blue-600 mb-3">
-                    {requirements.recommendedFuelType}
-                  </div>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    {requirements.fuelTypeReasoning}
-                  </p>
                 </div>
               )}
 
               {/* Typ nadwozia */}
               {requirements.recommendedBodyStyle && (
-                <div className="bg-white p-6 rounded-xl border-2 border-green-400 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-3xl">🚗</span>
-                    <div className="text-xs text-gray-500 uppercase tracking-wide">Nadwozie</div>
+                <div className="group relative bg-gradient-to-br from-emerald-50 to-teal-50 p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border-2 border-emerald-300 shadow-lg hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-300 hover:scale-105">
+                  <div className="absolute top-0 right-0 w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br from-emerald-400/10 to-transparent rounded-full blur-2xl" />
+                  <div className="relative">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                      <div className="p-1.5 sm:p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-md">
+                        <span className="text-xl sm:text-2xl">🚗</span>
+                      </div>
+                      <div className="text-xs text-emerald-700 font-bold uppercase tracking-wider">Nadwozie</div>
+                    </div>
+                    <div className="text-2xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-3 sm:mb-4">
+                      {requirements.recommendedBodyStyle}
+                    </div>
+                    <p className="text-xs text-gray-700 leading-relaxed">
+                      {requirements.bodyStyleReasoning}
+                    </p>
                   </div>
-                  <div className="text-3xl font-bold text-green-600 mb-3">
-                    {requirements.recommendedBodyStyle}
-                  </div>
-                  <p className="text-xs text-gray-600 leading-relaxed">
-                    {requirements.bodyStyleReasoning}
-                  </p>
                 </div>
               )}
             </div>
           </div>
 
+          <Paywall>
           {/* SEKCJA 2: Twój Profil */}
           <div className="mb-10 pb-8 border-b-2 border-gray-200">
             <h3 className="text-2xl font-light text-gray-900 mb-5 flex items-center gap-2">
@@ -336,17 +530,29 @@ export default function Results({ requirements, offers, onRestart }: ResultsProp
                 <div className="space-y-2 text-sm">
                   {formData.fuelTypePreference && (
                     <div className="text-gray-700">
-                      ⛽ Paliwo: {formData.fuelTypePreference === 'open' ? '🤖 Algorytm' : '🎯 Własny wybór'}
+                      ⛽ Paliwo: {
+                        formData.fuelTypePreference === 'open'
+                          ? `${requirements.recommendedFuelType} (rekomendacja)`
+                          : '🎯 Własny wybór'
+                      }
                     </div>
                   )}
                   {formData.bodyStylePreference && (
                     <div className="text-gray-700">
-                      🚗 Nadwozie: {formData.bodyStylePreference === 'open' ? '🤖 Algorytm' : '🎯 Własny wybór'}
+                      🚗 Nadwozie: {
+                        formData.bodyStylePreference === 'open'
+                          ? `${(requirements.recommendedBodyStyles || []).join(', ') || requirements.recommendedBodyStyle}`
+                          : '🎯 Własny wybór'
+                      }
                     </div>
                   )}
                   {formData.engineSizePreference && (
                     <div className="text-gray-700">
-                      🔧 Silnik: {formData.engineSizePreference === 'open' ? '🤖 Algorytm' : '🎯 Własny wybór'}
+                      🔧 Silnik: {
+                        formData.engineSizePreference === 'open'
+                          ? `${requirements.optimalEngineSize} cc, ~${requirements.recommendedPower} KM`
+                          : '🎯 Własny wybór'
+                      }
                     </div>
                   )}
                   {formData.olxRegion && (
@@ -356,48 +562,63 @@ export default function Results({ requirements, offers, onRestart }: ResultsProp
               </div>
             </div>
           </div>
+          </Paywall>
         </div>
 
         {/* ROCZNE KOSZTY I EKONOMIA */}
-        <div className="bg-gradient-to-br from-amber-50 to-white rounded-2xl p-8 md:p-12 mb-8 border-2 border-amber-300">
-          <h2 className="text-2xl font-light text-gray-900 mb-6 flex items-center gap-3">
-            <span className="text-3xl">💰</span>
-            <span>Roczne Koszty Utrzymania</span>
-          </h2>
+        <Paywall>
+        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-10 lg:p-14 mb-6 sm:mb-8 md:mb-10 border border-white/50 shadow-2xl shadow-amber-500/10 hover:shadow-amber-500/20 transition-shadow duration-500">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-10">
+            <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg sm:rounded-xl shadow-lg shadow-amber-500/30 flex-shrink-0">
+              <span className="text-2xl sm:text-3xl">💰</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+              Roczne Koszty Utrzymania
+            </h2>
+          </div>
           
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white p-5 rounded-xl border border-amber-200">
-              <div className="text-xs text-gray-500 mb-2 uppercase">Paliwo rocznie</div>
-              <div className="text-3xl font-bold text-amber-600">{requirements.estimatedAnnualCosts.fuel.toLocaleString()} zł</div>
-              <div className="text-xs text-gray-600 mt-1">{(requirements.usageProfile.annualMileage / 100 * 6).toFixed(0)} L/rok</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 md:gap-6 mb-4 sm:mb-6">
+            <div className="group bg-gradient-to-br from-amber-50 to-orange-50 p-4 sm:p-5 md:p-7 rounded-xl sm:rounded-2xl border-2 border-amber-300 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+              <div className="text-xs text-amber-700 font-bold uppercase tracking-wider mb-2 sm:mb-3">Paliwo rocznie</div>
+              <div className="text-3xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent mb-2">{requirements.estimatedAnnualCosts.fuel.toLocaleString()} zł</div>
+              <div className="text-xs sm:text-sm text-amber-700 font-semibold">{(requirements.usageProfile.annualMileage / 100 * 6).toFixed(0)} L/rok</div>
             </div>
 
-            <div className="bg-white p-5 rounded-xl border border-amber-200">
-              <div className="text-xs text-gray-500 mb-2 uppercase">Ubezpieczenie + serwis</div>
-              <div className="text-3xl font-bold text-amber-600">{(requirements.estimatedAnnualCosts.insurance + requirements.estimatedAnnualCosts.maintenance).toLocaleString()} zł</div>
-              <div className="text-xs text-gray-600 mt-1">OC/AC + przeglądy</div>
+            <div className="group bg-gradient-to-br from-blue-50 to-cyan-50 p-4 sm:p-5 md:p-7 rounded-xl sm:rounded-2xl border-2 border-blue-300 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+              <div className="text-xs text-blue-700 font-bold uppercase tracking-wider mb-2 sm:mb-3">Ubezpieczenie + serwis</div>
+              <div className="text-3xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">{(requirements.estimatedAnnualCosts.insurance + requirements.estimatedAnnualCosts.maintenance).toLocaleString()} zł</div>
+              <div className="text-xs sm:text-sm text-blue-700 font-semibold">OC/AC + przeglądy</div>
             </div>
 
-            <div className="bg-white p-5 rounded-xl border border-amber-200">
-              <div className="text-xs text-gray-500 mb-2 uppercase">Naprawy i części</div>
-              <div className="text-3xl font-bold text-amber-600">{requirements.estimatedAnnualCosts.repairs.toLocaleString()} zł</div>
-              <div className="text-xs text-gray-600 mt-1">Średnie naprawy/rok</div>
+            <div className="group bg-gradient-to-br from-purple-50 to-pink-50 p-4 sm:p-5 md:p-7 rounded-xl sm:rounded-2xl border-2 border-purple-300 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+              <div className="text-xs text-purple-700 font-bold uppercase tracking-wider mb-2 sm:mb-3">Naprawy i części</div>
+              <div className="text-3xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">{requirements.estimatedAnnualCosts.repairs.toLocaleString()} zł</div>
+              <div className="text-xs sm:text-sm text-purple-700 font-semibold">Średnie naprawy/rok</div>
             </div>
 
-            <div className="bg-white p-5 rounded-xl border-2 border-amber-500">
-              <div className="text-xs text-gray-500 mb-2 uppercase font-bold">RAZEM ROCZNIE</div>
-              <div className="text-4xl font-bold text-amber-700">{requirements.estimatedAnnualCosts.total.toLocaleString()} zł</div>
-              <div className="text-xs text-gray-600 mt-1">≈ {Math.round(requirements.estimatedAnnualCosts.total / 12)} zł/miesiąc</div>
+            <div className="group relative bg-gradient-to-br from-emerald-50 to-teal-50 p-4 sm:p-5 md:p-7 rounded-xl sm:rounded-2xl border-2 border-emerald-400 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300">
+              <div className="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-full blur-2xl" />
+              <div className="relative">
+                <div className="text-xs text-emerald-700 font-black uppercase tracking-wider mb-2 sm:mb-3">RAZEM ROCZNIE</div>
+                <div className="text-3xl sm:text-4xl md:text-5xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">{requirements.estimatedAnnualCosts.total.toLocaleString()} zł</div>
+                <div className="text-xs sm:text-sm text-emerald-700 font-bold">≈ {Math.round(requirements.estimatedAnnualCosts.total / 12)} zł/miesiąc</div>
+              </div>
             </div>
           </div>
         </div>
+        </Paywall>
 
         {/* BEZPIECZEŃSTWO I KOMFORT */}
-        <div className="bg-gradient-to-br from-red-50 to-white rounded-2xl p-8 md:p-12 mb-8 border-2 border-red-300">
-          <h2 className="text-2xl font-light text-gray-900 mb-6 flex items-center gap-3">
-            <span className="text-3xl">🛡️</span>
-            <span>Bezpieczeństwo i Komfort</span>
-          </h2>
+        <Paywall>
+        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-10 lg:p-14 mb-6 sm:mb-8 md:mb-10 border border-white/50 shadow-2xl shadow-red-500/10 hover:shadow-red-500/20 transition-shadow duration-500">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-10">
+            <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-red-400 to-rose-500 rounded-lg sm:rounded-xl shadow-lg shadow-red-500/30 flex-shrink-0">
+              <span className="text-2xl sm:text-3xl">🛡️</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
+              Bezpieczeństwo i Komfort
+            </h2>
+          </div>
           
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white p-5 rounded-xl border border-red-200">
@@ -449,13 +670,19 @@ export default function Results({ requirements, offers, onRestart }: ResultsProp
             )}
           </div>
         </div>
+        </Paywall>
 
         {/* AKCESORIA I SPECJALNE POTRZEBY */}
-        <div className="bg-gradient-to-br from-green-50 to-white rounded-2xl p-8 md:p-12 mb-8 border-2 border-green-300">
-          <h2 className="text-2xl font-light text-gray-900 mb-6 flex items-center gap-3">
-            <span className="text-3xl">🛠️</span>
-            <span>Rekomendowane Akcesoria i Akcje</span>
-          </h2>
+        <Paywall>
+        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-10 lg:p-14 mb-6 sm:mb-8 md:mb-10 border border-white/50 shadow-2xl shadow-teal-500/10 hover:shadow-teal-500/20 transition-shadow duration-500">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-10">
+            <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-lg sm:rounded-xl shadow-lg shadow-teal-500/30 flex-shrink-0">
+              <span className="text-2xl sm:text-3xl">🛠️</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+              Rekomendowane Akcesoria i Akcje
+            </h2>
+          </div>
           
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             <div className="bg-white p-5 rounded-xl border border-green-200">
@@ -519,81 +746,80 @@ export default function Results({ requirements, offers, onRestart }: ResultsProp
             </div>
           </div>
         </div>
+        </Paywall>
 
         {/* REKOMENDACJE NA PODSTAWIE STYLU ŻYCIA */}
-        <div className="bg-gradient-to-br from-purple-50 to-white rounded-2xl p-8 md:p-12 mb-8 border-2 border-purple-300">
-          <h2 className="text-2xl font-light text-gray-900 mb-6 flex items-center gap-3">
-            <span className="text-3xl">🎯</span>
-            <span>Personalne Rekomendacje</span>
-          </h2>
+        <Paywall>
+        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:pb-10 md:pt-10 lg:p-14 mb-6 sm:mb-8 md:mb-10 border border-white/50 shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-shadow duration-500">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-10">
+            <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-purple-400 to-fuchsia-500 rounded-lg sm:rounded-xl shadow-lg shadow-purple-500/30 flex-shrink-0">
+              <span className="text-2xl sm:text-3xl">🎯</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
+              Personalne Rekomendacje
+            </h2>
+          </div>
           
-          <div className="bg-white p-6 rounded-xl border border-purple-200">
-            <div className="space-y-3">
+          <div className="bg-gradient-to-br from-purple-50 to-fuchsia-50 p-8 rounded-2xl border-2 border-purple-200 shadow-lg">
+            <div className="space-y-4">
               {requirements.lifestyleRecommendations.map((recommendation, i) => (
-                <div key={i} className="flex items-start gap-3 pb-3 border-b border-gray-200 last:border-b-0">
-                  <span className="text-purple-600 text-xl">→</span>
-                  <p className="text-gray-700">{recommendation}</p>
+                <div key={i} className="flex items-start gap-4 pb-4 border-b border-purple-200/50 last:border-b-0">
+                  <div className="p-2 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-lg shadow-md flex-shrink-0">
+                    <span className="text-white text-sm font-bold">→</span>
+                  </div>
+                  <p className="text-gray-800 font-medium leading-relaxed">{recommendation}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
-
-        {/* ALTERNATYWNE MODELE */}
-        <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl p-8 md:p-12 mb-8 border-2 border-blue-300">
-          <h2 className="text-2xl font-light text-gray-900 mb-6 flex items-center gap-3">
-            <span className="text-3xl">🚗</span>
-            <span>Alternatywne Modele</span>
-          </h2>
-          
-          <div className="bg-white p-5 rounded-xl border border-blue-200">
-            <p className="text-sm text-gray-600 mb-3">Poniżej znajdziesz konkurencyjne modele w podobnym segmencie:</p>
-            <div className="grid md:grid-cols-4 gap-3">
-              {requirements.competitorModels.map((model, i) => (
-                <div key={i} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="text-sm font-medium text-gray-900">{model}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        </Paywall>
 
         {/* EKOLOGIA I EMISJE */}
-        <div className="bg-gradient-to-br from-green-50 to-white rounded-2xl p-8 md:p-12 mb-8 border-2 border-green-400">
-          <h2 className="text-2xl font-light text-gray-900 mb-6 flex items-center gap-3">
-            <span className="text-3xl">🌍</span>
-            <span>Ekologia i Emisje CO₂</span>
-          </h2>
+        <Paywall>
+        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-10 lg:p-14 mb-6 sm:mb-8 md:mb-10 border border-white/50 shadow-2xl shadow-emerald-500/10 hover:shadow-emerald-500/20 transition-shadow duration-500">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-10">
+            <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg sm:rounded-xl shadow-lg shadow-emerald-500/30 flex-shrink-0">
+              <span className="text-2xl sm:text-3xl">🌍</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              Ekologia i Emisje CO₂
+            </h2>
+          </div>
           
           <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-white p-5 rounded-xl border border-green-300">
-              <div className="text-xs text-gray-500 mb-2">Emisja CO₂</div>
-              <div className="text-3xl font-bold text-green-600">{requirements.environmentalInfo.co2Emissions}</div>
-              <div className="text-xs text-gray-600">g/km (szacunkowo)</div>
+            <div className="group bg-gradient-to-br from-emerald-50 to-teal-50 p-7 rounded-2xl border-2 border-emerald-300 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+              <div className="text-xs text-emerald-700 font-bold uppercase tracking-wider mb-3">Emisja CO₂</div>
+              <div className="text-5xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">{requirements.environmentalInfo.co2Emissions}</div>
+              <div className="text-sm text-emerald-700 font-semibold">g/km (szacunkowo)</div>
             </div>
 
-            <div className="bg-white p-5 rounded-xl border border-green-300">
-              <div className="text-xs text-gray-500 mb-2">Standard europejski</div>
-              <div className="text-2xl font-bold text-green-600">{requirements.environmentalInfo.euStandard}</div>
-              <div className="text-xs text-gray-600">Zaawansowane oczyszczanie</div>
+            <div className="group bg-gradient-to-br from-blue-50 to-cyan-50 p-7 rounded-2xl border-2 border-blue-300 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+              <div className="text-xs text-blue-700 font-bold uppercase tracking-wider mb-3">Standard europejski</div>
+              <div className="text-4xl font-black bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">{requirements.environmentalInfo.euStandard}</div>
+              <div className="text-sm text-blue-700 font-semibold">Zaawansowane oczyszczanie</div>
             </div>
 
-            <div className="bg-white p-5 rounded-xl border border-green-300">
-              <div className="text-xs text-gray-500 mb-2">Poziom emisji</div>
-              <div className="text-xl font-bold text-green-600">{requirements.environmentalInfo.pollutantLevel}</div>
-              <div className="text-xs text-gray-600">Dla środowiska</div>
+            <div className="group bg-gradient-to-br from-purple-50 to-pink-50 p-7 rounded-2xl border-2 border-purple-300 shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300">
+              <div className="text-xs text-purple-700 font-bold uppercase tracking-wider mb-3">Poziom emisji</div>
+              <div className="text-3xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">{requirements.environmentalInfo.pollutantLevel}</div>
+              <div className="text-sm text-purple-700 font-semibold">Dla środowiska</div>
             </div>
           </div>
         </div>
+        </Paywall>
 
         {/* FULL ANALYSIS */}
-        <div className="bg-linear-to-r from-[#faf5f5] to-white rounded-2xl p-8 md:p-12 mb-8 border-2 border-gray-300">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-light text-gray-900 flex items-center gap-3">
-              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <Paywall>
+        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-10 lg:p-14 mb-6 sm:mb-8 md:mb-10 border border-white/50 shadow-2xl shadow-indigo-500/10 hover:shadow-indigo-500/20 transition-shadow duration-500">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-10">
+            <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg sm:rounded-xl shadow-lg shadow-indigo-500/30 flex-shrink-0">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Szczegóły Techniczne
             </h2>
           </div>
@@ -626,9 +852,6 @@ export default function Results({ requirements, offers, onRestart }: ResultsProp
             </div>
           </div>
 
-          <p className="text-sm text-gray-600 font-light">
-            {requirements.reasoning.segment}
-          </p>
 
           <div className="grid md:grid-cols-3 gap-6 mb-8 mt-8">
             {/* Bagażnik */}
@@ -718,128 +941,101 @@ export default function Results({ requirements, offers, onRestart }: ResultsProp
             </div>
           )}
         </div>
+        </Paywall>
 
-        {/* OFFERS SECTION */}
-        {offers && offers.length > 0 && (
-          <div className="mt-16">
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-light text-gray-900 mb-4">
-                Aktualne Oferty
-              </h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Znaleźliśmy {offers.length} ofert które pasują do Twoich wymagań
-              </p>
+        {/* ALTERNATYWNE MODELE */}
+        <Paywall>
+        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl lg:rounded-[32px] p-4 sm:p-6 md:p-10 lg:p-16 mb-6 sm:mb-8 md:mb-12 border border-white/50 shadow-2xl shadow-blue-500/10 hover:shadow-blue-500/20 transition-shadow duration-500">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-12">
+            <div className="p-2 sm:p-3 md:p-4 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/30 flex-shrink-0">
+              <span className="text-2xl sm:text-3xl md:text-4xl">🚗</span>
             </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Przykładowe Modele
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+            {[
+              { model: 'Toyota Corolla', variant: '2020 | 45k km', year: 2020, mileage: 45000, price: 65000, fuel: 'Benzyna', engine: '1.6L', power: 130, color: 'from-blue-500 to-blue-600' },
+              { model: 'Honda Civic', variant: '2019 | 62k km', year: 2019, mileage: 62000, price: 58000, fuel: 'Benzyna', engine: '1.5L', power: 128, color: 'from-indigo-500 to-indigo-600' },
+              { model: 'Mazda3', variant: '2021 | 32k km', year: 2021, mileage: 32000, price: 72000, fuel: 'Benzyna', engine: '2.0L', power: 150, color: 'from-purple-500 to-purple-600' },
+              { model: 'Hyundai i30', variant: '2018 | 78k km', year: 2018, mileage: 78000, price: 45000, fuel: 'Diesel', engine: '1.6L', power: 110, color: 'from-cyan-500 to-blue-500' },
+            ]
+            .map((offer) => ({
+              ...offer,
+              matchPercentage: calculateMatchPercentage(offer, requirements)
+            }))
+            .sort((a, b) => b.matchPercentage - a.matchPercentage)
+            .map((offer, i) => {
+              const matchColor = offer.matchPercentage >= 80 ? 'text-green-600' : offer.matchPercentage >= 60 ? 'text-yellow-600' : 'text-orange-600';
+              const matchBgColor = offer.matchPercentage >= 80 ? 'bg-green-50 border-green-200' : offer.matchPercentage >= 60 ? 'bg-yellow-50 border-yellow-200' : 'bg-orange-50 border-orange-200';
+              
+              return (
+              <div key={i} className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                {/* Gradient header */}
+                <div className={`bg-gradient-to-r ${offer.color} h-24 relative overflow-hidden`}>
+                  <div className="absolute inset-0 opacity-10 bg-pattern"></div>
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full -mr-10 -mt-10 opacity-10 group-hover:scale-150 transition-transform duration-300"></div>
+                  {/* Match percentage badge */}
+                  <div className={`absolute top-4 right-4 ${matchBgColor} border rounded-lg px-3 py-2`}>
+                    <div className="text-xs font-bold text-gray-700">Zgodność</div>
+                    <div className={`text-xl font-bold ${matchColor}`}>{offer.matchPercentage}%</div>
+                  </div>
+                </div>
 
-            <div className="space-y-6">
-              {offers.map((offer) => {
-                const matchColor = offer.matchScore >= 85 ? 'bg-green-50 border-green-200' :
-                                   offer.matchScore >= 70 ? 'bg-blue-50 border-blue-200' :
-                                   offer.matchScore >= 60 ? 'bg-yellow-50 border-yellow-200' :
-                                   'bg-red-50 border-red-200';
+                {/* Content */}
+                <div className="relative -mt-12 px-6 pb-6 pt-4">
+                  <div className="bg-white rounded-xl p-4 mb-4 shadow-lg">
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{offer.model}</div>
+                    <div className="text-sm text-gray-500 font-medium">{offer.variant}</div>
+                  </div>
 
-                const matchBgColor = offer.matchScore >= 85 ? 'bg-green-100 text-green-700' :
-                                     offer.matchScore >= 70 ? 'bg-blue-100 text-blue-700' :
-                                     offer.matchScore >= 60 ? 'bg-yellow-100 text-yellow-700' :
-                                     'bg-red-100 text-red-700';
+                  {/* Price highlight */}
+                  <div className="bg-gradient-to-r from-orange-100 to-red-100 rounded-xl p-4 mb-4 border border-orange-200">
+                    <div className="text-xs text-gray-600 font-semibold mb-1 uppercase tracking-wide">Cena</div>
+                    <div className="text-3xl font-bold text-orange-600">{(offer.price / 1000).toFixed(0)}k zł</div>
+                  </div>
 
-                return (
-                  <div key={offer.id} className={`border-2 rounded-2xl p-8 md:p-10 transition-all hover:shadow-md ${matchColor}`}>
-                    <div className="flex items-start justify-between mb-6">
-                      <div>
-                        <h3 className="text-2xl md:text-3xl font-light text-gray-900">
-                          {offer.make} {offer.model}
-                        </h3>
-                        <p className="text-gray-600 text-sm mt-1">
-                          {offer.year} • {offer.mileage.toLocaleString()} km {offer.location && `• ${offer.location}`}
-                        </p>
+                  {/* Stats grid */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200">
+                      <div className="text-xs text-gray-600 font-semibold mb-1 flex items-center gap-1">
+                        <span>⛽</span> Paliwo
                       </div>
-
-                      <div className="text-right">
-                        <div className={`px-6 py-3 rounded-full text-center ${matchBgColor} font-semibold text-lg`}>
-                          {offer.matchScore}%
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">dopasowanie</p>
-                      </div>
+                      <div className="text-sm font-bold text-gray-900">{offer.fuel}</div>
                     </div>
-
-                    <div className="mb-6 p-4 bg-white/60 rounded-xl">
-                      <div className="text-3xl font-semibold text-[#b85450] mb-1">
-                        {offer.price.toLocaleString()} zł
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200">
+                      <div className="text-xs text-gray-600 font-semibold mb-1 flex items-center gap-1">
+                        <span>⚙️</span> Silnik
                       </div>
-                      <div className="text-sm text-gray-600">
-                        Cena rynkowa na Otomoto
-                      </div>
+                      <div className="text-sm font-bold text-gray-900">{offer.engine}</div>
                     </div>
-
-                    <div className="grid md:grid-cols-3 gap-4 mb-6">
-                      <div className="bg-white/60 p-3 rounded-lg">
-                        <div className="text-xs text-gray-500 mb-1">Paliwo</div>
-                        <div className="font-medium text-gray-900">{offer.fuelType}</div>
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200">
+                      <div className="text-xs text-gray-600 font-semibold mb-1 flex items-center gap-1">
+                        <span>🏎️</span> Moc
                       </div>
-                      <div className="bg-white/60 p-3 rounded-lg">
-                        <div className="text-xs text-gray-500 mb-1">Moc</div>
-                        <div className="font-medium text-gray-900">{offer.enginePower} KM</div>
-                      </div>
-                      <div className="bg-white/60 p-3 rounded-lg">
-                        <div className="text-xs text-gray-500 mb-1">Skrzynia</div>
-                        <div className="font-medium text-gray-900">{offer.transmission}</div>
-                      </div>
-                      <div className="bg-white/60 p-3 rounded-lg">
-                        <div className="text-xs text-gray-500 mb-1">Napęd</div>
-                        <div className="font-medium text-gray-900">{offer.driveType}</div>
-                      </div>
+                      <div className="text-sm font-bold text-gray-900">{offer.power} KM</div>
                     </div>
-
-                    <div className="mb-6 p-4 bg-white/60 rounded-xl">
-                      <h4 className="font-medium text-gray-900 mb-3">Porównanie z Twoimi wymaganiami:</h4>
-                      <ul className="space-y-2">
-                        <li className="flex items-start gap-2">
-                          <span className={`text-lg mt-0 ${offer.enginePower >= requirements.minPower ? 'text-green-600' : 'text-red-600'}`}>
-                            {offer.enginePower >= requirements.minPower ? '✓' : '✗'}
-                          </span>
-                          <span className="text-sm text-gray-700">
-                            Moc {offer.enginePower} KM (wymagane min. {requirements.minPower} KM)
-                          </span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="text-lg text-blue-600">→</span>
-                          <span className="text-sm text-gray-700">
-                            Szacunkowy roczny koszt eksploatacji: ~{Math.round((offer.enginePower / 100) * 4500)} zł
-                          </span>
-                        </li>
-                      </ul>
-                    </div>
-
-                    {offer.warnings && offer.warnings.length > 0 && (
-                      <div className="mb-6 p-4 bg-amber-100/50 border border-amber-300 rounded-xl">
-                        <h4 className="font-medium text-amber-900 mb-2">Uwagi:</h4>
-                        <ul className="space-y-1">
-                          {offer.warnings.map((warning, i) => (
-                            <li key={i} className="text-sm text-amber-800">• {warning}</li>
-                          ))}
-                        </ul>
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200">
+                      <div className="text-xs text-gray-600 font-semibold mb-1 flex items-center gap-1">
+                        <span>📊</span> Przebieg
                       </div>
-                    )}
-
-                    <div className="flex gap-3">
-                      {offer.url && (
-                        <a
-                          href={offer.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 px-6 py-3 bg-[#b85450] text-white rounded-full hover:bg-[#a04946] transition-colors font-medium text-center"
-                        >
-                          Przejdź do oferty →
-                        </a>
-                      )}
+                      <div className="text-sm font-bold text-gray-900">{(offer.mileage / 1000).toFixed(0)}k km</div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+
+                  {/* Button */}
+                  <button className={`w-full py-3 px-4 rounded-xl font-bold text-white transition-all duration-300 transform group-hover:shadow-lg bg-gradient-to-r ${offer.color} hover:opacity-90`}>
+                    Pokaż ofertę →
+                  </button>
+                </div>
+              </div>
+            );
+            })}
+          </div>        
+        </div>
+        </Paywall>
 
         {/* Back Button */}
         <div className="text-center mt-16">

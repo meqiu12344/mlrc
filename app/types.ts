@@ -242,11 +242,9 @@ export interface SavedReport {
   id: string;
   userId: string;
   createdAt: Date;
-  isPaid: boolean;
   formData: FormData;
   requirements: CalculatedRequirements;
-  offers: CarOffer[];
-  title?: string; // Opcjonalna nazwa raportu
+  name?: string; // Nazwa raportu (generowana automatycznie lub podana przez użytkownika)
 }
 
 // Dane logowania/rejestracji

@@ -10,6 +10,7 @@ export default function ProfilePage() {
   const { user, isLoading, logout, getSavedReports, deleteReport } = useAuth();
   const router = useRouter();
   const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
+  const [loadingReports, setLoadingReports] = useState(true);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -18,20 +19,38 @@ export default function ProfilePage() {
   }, [user, isLoading, router]);
 
   useEffect(() => {
-    if (user) {
-      setSavedReports(getSavedReports());
-    }
-  }, [user]);
+    const loadReports = async () => {
+      if (user) {
+        setLoadingReports(true);
+        try {
+          const reports = await getSavedReports();
+          setSavedReports(reports);
+        } catch (error) {
+          console.error('Błąd ładowania raportów:', error);
+        } finally {
+          setLoadingReports(false);
+        }
+      }
+    };
+    
+    loadReports();
+  }, [user, getSavedReports]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push('/');
   };
 
-  const handleDeleteReport = (reportId: string) => {
+  const handleDeleteReport = async (reportId: string) => {
     if (confirm('Czy na pewno chcesz usunąć ten raport?')) {
-      deleteReport(reportId);
-      setSavedReports(getSavedReports());
+      try {
+        await deleteReport(reportId);
+        const reports = await getSavedReports();
+        setSavedReports(reports);
+      } catch (error) {
+        console.error('Błąd usuwania raportu:', error);
+        alert('Nie udało się usunąć raportu');
+      }
     }
   };
 
@@ -94,15 +113,18 @@ export default function ProfilePage() {
               <div className="text-3xl font-bold text-gray-900">{savedReports.length}</div>
             </div>
             <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <div className="text-sm text-gray-600 mb-1">Raporty bezpłatne</div>
-              <div className="text-3xl font-bold text-green-600">
-                {savedReports.filter(r => !r.isPaid).length}
+              <div className="text-sm text-gray-600 mb-1">Ostatni raport</div>
+              <div className="text-lg font-bold text-green-600">
+                {savedReports.length > 0 
+                  ? savedReports[0].createdAt.toLocaleDateString('pl-PL')
+                  : 'Brak'
+                }
               </div>
             </div>
             <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <div className="text-sm text-gray-600 mb-1">Raporty premium</div>
-              <div className="text-3xl font-bold text-blue-600">
-                {savedReports.filter(r => r.isPaid).length}
+              <div className="text-sm text-gray-600 mb-1">Konto premium</div>
+              <div className="text-lg font-bold text-blue-600">
+                {user.isPremium ? '✨ Aktywne' : 'Nieaktywne'}
               </div>
             </div>
           </div>
@@ -113,7 +135,12 @@ export default function ProfilePage() {
               <h2 className="text-xl font-bold text-gray-900">Twoje raporty</h2>
             </div>
 
-            {savedReports.length === 0 ? (
+            {loadingReports ? (
+              <div className="px-6 py-12 text-center">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                <p className="text-gray-600">Ładowanie raportów...</p>
+              </div>
+            ) : savedReports.length === 0 ? (
               <div className="px-6 py-12 text-center">
                 <p className="text-gray-600 mb-4">Nie masz jeszcze żadnych zapisanych raportów</p>
                 <button
@@ -131,22 +158,24 @@ export default function ProfilePage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="font-semibold text-gray-900">
-                            {report.title || `Raport z ${new Date(report.createdAt).toLocaleDateString('pl-PL')}`}
+                            {report.name || `Raport z ${new Date(report.createdAt).toLocaleDateString('pl-PL')}`}
                           </h3>
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            report.isPaid 
-                              ? 'bg-blue-100 text-blue-700' 
-                              : 'bg-green-100 text-green-700'
-                          }`}>
-                            {report.isPaid ? 'Premium' : 'Bezpłatny'}
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                            ✓ Zapisany
                           </span>
                         </div>
                         <div className="text-sm text-gray-600 space-y-1">
-                          <p>Data utworzenia: {new Date(report.createdAt).toLocaleString('pl-PL')}</p>
-                          <p>Budżet: {report.requirements.recommendedBudget?.toLocaleString('pl-PL')} PLN</p>
-                          <p>Znalezione oferty: {report.offers?.length || 0}</p>
+                          <p>📅 Data: {new Date(report.createdAt).toLocaleString('pl-PL', {
+                            year: 'numeric',
+                            month: 'long', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}</p>
+                          <p>💰 Budżet: {report.requirements.recommendedBudget?.toLocaleString('pl-PL')} PLN</p>
+                          <p>🚗 Bagażnik: {report.requirements.recommendedTrunkCapacity}L</p>
                           {report.requirements.recommendedSegments && (
-                            <p>Segmenty: {report.requirements.recommendedSegments.join(', ')}</p>
+                            <p>📊 Segmenty: {report.requirements.recommendedSegments.join(', ')}</p>
                           )}
                         </div>
                       </div>
@@ -155,7 +184,7 @@ export default function ProfilePage() {
                           onClick={() => handleViewReport(report)}
                           className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
                         >
-                          Otwórz
+                          👁️ Otwórz
                         </button>
                         <button
                           onClick={() => handleDeleteReport(report.id)}
