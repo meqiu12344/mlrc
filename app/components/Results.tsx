@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { CalculatedRequirements, CarOffer } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useFormContext } from '../context/FormContext';
@@ -23,6 +23,15 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const { user, saveReport, updateReportPremium, getSavedReports } = useAuth();
   const { formData } = useFormContext();
+  const hasAutoSavedRef = useRef(false); // chroni przed wielokrotnym autozapisem
+
+  // Jeśli wchodzimy z istniejącym raportem, ustaw stan zapisany
+  useEffect(() => {
+    if (initialReportId) {
+      setReportSaved(true);
+      setReportId(initialReportId);
+    }
+  }, [initialReportId]);
  
   useEffect(() => {
     const checkPremiumStatus = async () => {
@@ -93,42 +102,48 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
   );
 
 
-  // Automatyczne zapisywanie raportu dla zalogowanych użytkowników
+  // Automatyczne zapisywanie raportu dla zalogowanych użytkowników (tylko raz)
   useEffect(() => {
     const autoSaveReport = async () => {
-      if (user && !reportSaved && !autoSaving && !disableAutoSave) {
-        setAutoSaving(true);
-        try {
-          console.log('Rozpoczynam automatyczne zapisywanie raportu...');
-          const savedReportId = await saveReport({
-            formData,
-            requirements,
-            name: `Raport z ${new Date().toLocaleDateString('pl-PL', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}`,
-          });
-          console.log('Raport zapisany pomyślnie z ID:', savedReportId);
-          setReportId(savedReportId);
-          setReportSaved(true);
-        } catch (error: any) {
-          console.error('Błąd automatycznego zapisywania:', error);
-          console.error('Szczegóły błędu:', error.message);
-          // Nie pokazujemy alertu dla automatycznego zapisu - nie przerywamy UX
-        } finally {
-          setAutoSaving(false);
-        }
+      if (!user || disableAutoSave) return;
+      if (reportSaved || autoSaving || hasAutoSavedRef.current) return;
+
+      hasAutoSavedRef.current = true; // blokada przed kolejnym wywołaniem
+      setAutoSaving(true);
+      try {
+        console.log('Rozpoczynam automatyczne zapisywanie raportu...');
+        const savedReportId = await saveReport({
+          formData,
+          requirements,
+          name: `Raport z ${new Date().toLocaleDateString('pl-PL', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}`,
+        });
+        console.log('Raport zapisany pomyślnie z ID:', savedReportId);
+        setReportId(savedReportId);
+        setReportSaved(true);
+      } catch (error: any) {
+        console.error('Błąd automatycznego zapisywania:', error);
+        console.error('Szczegóły błędu:', error.message);
+        hasAutoSavedRef.current = false; // pozwól spróbować ponownie ręcznie
+      } finally {
+        setAutoSaving(false);
       }
     };
 
     autoSaveReport();
-  }, [user, reportSaved, autoSaving, formData, requirements, saveReport, disableAutoSave]);
+  }, [user, disableAutoSave, reportSaved, autoSaving, formData, requirements, saveReport]);
 
   const handleSaveReport = async () => {
     if (!user) return;
+    if (reportSaved && reportId) {
+      alert('Raport jest już zapisany.');
+      return;
+    }
     
     setAutoSaving(true);
     try {
@@ -145,6 +160,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
       });
       setReportId(savedReportId);
       setReportSaved(true);
+      hasAutoSavedRef.current = true;
       alert('Raport zapisany pomyślnie!');
     } catch (error: any) {
       console.error('Błąd zapisywania:', error);

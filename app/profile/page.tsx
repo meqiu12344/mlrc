@@ -89,13 +89,6 @@ export default function ProfilePage() {
               <div>
                 <h1 className="text-3xl font-bold mb-2">Witaj, {user.name}!</h1>
                 <p className="text-blue-100 mb-1">{user.email}</p>
-                <div className="flex items-center gap-2 mt-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    user.isPremium ? 'bg-yellow-400 text-yellow-900' : 'bg-blue-500 text-white'
-                  }`}>
-                    {user.isPremium ? '✨ Premium' : 'Darmowy'}
-                  </span>
-                </div>
               </div>
               <button
                 onClick={handleLogout}
@@ -107,7 +100,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Statystyki */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-white border border-gray-200 rounded-lg p-6">
               <div className="text-sm text-gray-600 mb-1">Wszystkie raporty</div>
               <div className="text-3xl font-bold text-gray-900">{savedReports.length}</div>
@@ -119,12 +112,6 @@ export default function ProfilePage() {
                   ? savedReports[0].createdAt.toLocaleDateString('pl-PL')
                   : 'Brak'
                 }
-              </div>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <div className="text-sm text-gray-600 mb-1">Konto premium</div>
-              <div className="text-lg font-bold text-blue-600">
-                {user.isPremium ? '✨ Aktywne' : 'Nieaktywne'}
               </div>
             </div>
           </div>
@@ -163,6 +150,15 @@ export default function ProfilePage() {
                           <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
                             ✓ Zapisany
                           </span>
+                          { report.isPremium ? (
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
+                              ⭐ Premium
+                            </span>
+                          ) : (
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 ">
+                              🆓 Darmowy raport
+                            </span>
+                          ) }
                         </div>
                         <div className="text-sm text-gray-600 space-y-1">
                           <p>📅 Data: {new Date(report.createdAt).toLocaleString('pl-PL', {
@@ -199,26 +195,6 @@ export default function ProfilePage() {
               </div>
             )}
           </div>
-
-          {/* Informacja o premium */}
-          {!user.isPremium && (
-            <div className="mt-8 bg-linear-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-6">
-              <div className="flex items-start gap-4">
-                <div className="text-4xl">✨</div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    Przejdź na Premium
-                  </h3>
-                  <p className="text-gray-700 mb-4">
-                    Uzyskaj dostęp do zaawansowanych analiz, większej liczby ofert i priorytetowego wsparcia.
-                  </p>
-                  <button className="bg-yellow-400 text-yellow-900 px-6 py-2 rounded-lg font-semibold hover:bg-yellow-500 transition">
-                    Zobacz plany Premium
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </main>
     </div>
