@@ -3,6 +3,13 @@ import { stripe } from '@/app/lib/stripe';
 
 export async function POST(req: Request) {
   try {
+    const body = await req.json();
+    const { reportId } = body;
+    
+    if (!reportId) {
+      return NextResponse.json({ error: 'Brak reportId - zapisz najpierw raport' }, { status: 400 });
+    }
+    
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     if (!appUrl) {
       return NextResponse.json({ error: 'Missing NEXT_PUBLIC_APP_URL' }, { status: 500 });
@@ -24,6 +31,9 @@ export async function POST(req: Request) {
           },
         },
       ],
+      metadata: {
+        reportId,
+      },
       success_url: `${appUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/payment/cancel`,
     });

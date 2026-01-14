@@ -2,13 +2,23 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/app/context/AuthContext';
 
 function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user, isLoading, updateReportPremium } = useAuth();
   const [status, setStatus] = useState<'checking' | 'paid' | 'unpaid' | 'error'>('checking');
 
   useEffect(() => {
+    // Poczekaj aż user się załaduje
+    if (isLoading) return;
+    
+    if (!user) {
+      setStatus('error');
+      return;
+    }
+
     const sessionId = searchParams.get('session_id');
     if (!sessionId) {
       setStatus('error');
@@ -20,8 +30,9 @@ function PaymentSuccessContent() {
         const res = await fetch(`/api/verify-session?session_id=${sessionId}`);
         if (!res.ok) throw new Error('verify failed');
         const data = await res.json();
-        if (data.paid) {
-          localStorage.setItem('mlrc_premium_access', 'true');
+        if (data.paid && data.reportId) {
+          // Zaktualizuj raport jako premium w bazie danych
+          await updateReportPremium(data.reportId);
           setStatus('paid');
         } else {
           setStatus('unpaid');
@@ -33,7 +44,7 @@ function PaymentSuccessContent() {
     };
 
     verify();
-  }, [searchParams]);
+  }, [searchParams, updateReportPremium, user, isLoading]);
 
   const goToResults = () => router.push('/results');
 

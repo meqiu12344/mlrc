@@ -11,7 +11,9 @@ export async function GET(req: Request) {
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     const paid = session.payment_status === 'paid';
-    return NextResponse.json({ paid });
+    const reportId = session.metadata?.reportId;
+    
+    return NextResponse.json({ paid, reportId });
   } catch (error: any) {
     console.error('Verify session error', error);
     return NextResponse.json({ error: 'Nie udało się zweryfikować płatności' }, { status: 500 });

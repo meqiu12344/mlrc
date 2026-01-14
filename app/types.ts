@@ -245,6 +245,7 @@ export interface SavedReport {
   formData: FormData;
   requirements: CalculatedRequirements;
   name?: string; // Nazwa raportu (generowana automatycznie lub podana przez użytkownika)
+  isPremium: boolean; // Czy raport został odblokowany płatnością
 }
 
 // Dane logowania/rejestracji

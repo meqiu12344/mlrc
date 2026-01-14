@@ -11,31 +11,53 @@ interface ResultsProps {
   offers: CarOffer[];
   onRestart: () => void;
   disableAutoSave?: boolean;
+  reportId?: string; // ID zapisanego raportu (jeśli otwieramy istniejący)
 }
 
-export default function Results({ requirements, offers, onRestart, disableAutoSave = false }: ResultsProps) {
+export default function Results({ requirements, offers, onRestart, disableAutoSave = false, reportId: initialReportId }: ResultsProps) {
   const [reportSaved, setReportSaved] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
+  const [reportId, setReportId] = useState<string | undefined>(initialReportId);
   const [hasAccess, setHasAccess] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
-  const { user, saveReport } = useAuth();
+  const { user, saveReport, updateReportPremium, getSavedReports } = useAuth();
   const { formData } = useFormContext();
  
   useEffect(() => {
-    try {
-      const unlocked = typeof window !== 'undefined' && localStorage.getItem('mlrc_premium_access') === 'true';
-      setHasAccess(Boolean(unlocked));
-    } catch (e) {
-      console.error('Nie udało się odczytać statusu dostępu', e);
-    }
-  }, []);
+    const checkPremiumStatus = async () => {
+      if (!user || !reportId) {
+        setHasAccess(false);
+        return;
+      }
+      
+      try {
+        const reports = await getSavedReports();
+        const currentReport = reports.find(r => r.id === reportId);
+        setHasAccess(currentReport?.isPremium || false);
+      } catch (e) {
+        console.error('Nie udało się sprawdzić statusu premium', e);
+        setHasAccess(false);
+      }
+    };
+    
+    checkPremiumStatus();
+  }, [user, reportId, getSavedReports]);
 
   const startCheckout = async () => {
+    if (!reportId) {
+      setCheckoutError('Najpierw zapisz raport, aby odblokować płatność.');
+      return;
+    }
+    
     setCheckoutLoading(true);
     setCheckoutError(null);
     try {
-      const res = await fetch('/api/create-checkout-session', { method: 'POST' });
+      const res = await fetch('/api/create-checkout-session', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportId }),
+      });
       const data = await res.json();
       if (!res.ok || !data.url) throw new Error(data.error || 'Brak adresu płatności');
       window.location.href = data.url;
@@ -78,7 +100,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
         setAutoSaving(true);
         try {
           console.log('Rozpoczynam automatyczne zapisywanie raportu...');
-          await saveReport({
+          const savedReportId = await saveReport({
             formData,
             requirements,
             name: `Raport z ${new Date().toLocaleDateString('pl-PL', { 
@@ -89,7 +111,8 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
               minute: '2-digit'
             })}`,
           });
-          console.log('Raport zapisany pomyślnie!');
+          console.log('Raport zapisany pomyślnie z ID:', savedReportId);
+          setReportId(savedReportId);
           setReportSaved(true);
         } catch (error: any) {
           console.error('Błąd automatycznego zapisywania:', error);
@@ -109,7 +132,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
     
     setAutoSaving(true);
     try {
-      await saveReport({
+      const savedReportId = await saveReport({
         formData,
         requirements,
         name: `Raport z ${new Date().toLocaleDateString('pl-PL', { 
@@ -120,6 +143,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
           minute: '2-digit'
         })}`,
       });
+      setReportId(savedReportId);
       setReportSaved(true);
       alert('Raport zapisany pomyślnie!');
     } catch (error: any) {

@@ -31,9 +31,10 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
-  saveReport: (report: Omit<SavedReport, 'id' | 'userId' | 'createdAt'>) => Promise<void>;
+  saveReport: (report: Omit<SavedReport, 'id' | 'userId' | 'createdAt' | 'isPremium'>) => Promise<string>;
   getSavedReports: () => Promise<SavedReport[]>;
   deleteReport: (reportId: string) => Promise<void>;
+  updateReportPremium: (reportId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -136,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  const saveReport = async (report: Omit<SavedReport, 'id' | 'userId' | 'createdAt'>) => {
+  const saveReport = async (report: Omit<SavedReport, 'id' | 'userId' | 'createdAt' | 'isPremium'>): Promise<string> => {
     if (!user) {
       throw new Error('Musisz być zalogowany, aby zapisać raport');
     }
@@ -151,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: report.name || `Raport z ${new Date().toLocaleDateString('pl-PL')}`,
         formData: JSON.parse(JSON.stringify(report.formData)), // Deep copy + serializacja
         requirements: JSON.parse(JSON.stringify(report.requirements)), // Deep copy + serializacja
+        isPremium: false, // Domyślnie raport nie jest premium
       };
 
       console.log('Dane do zapisu:', reportData);
@@ -158,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const docRef = await addDoc(collection(db, 'reports'), reportData);
       
       console.log('Raport zapisany z ID:', docRef.id);
+      return docRef.id;
     } catch (error: any) {
       console.error('Szczegółowy błąd zapisywania raportu:', {
         code: error.code,
@@ -188,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           requirements: data.requirements,
           formData: data.formData,
           name: data.name,
+          isPremium: data.isPremium || false,
         });
       });
 
@@ -195,6 +199,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Błąd pobierania raportów:', error);
       return [];
+    }
+  };
+
+  const updateReportPremium = async (reportId: string) => {
+    if (!user) {
+      throw new Error('Musisz być zalogowany aby zaktualizować raport');
+    }
+
+    try {
+      await updateDoc(doc(db, 'reports', reportId), {
+        isPremium: true,
+      });
+      console.log('Raport zaktualizowany jako premium:', reportId);
+    } catch (error: any) {
+      console.error('Błąd aktualizacji raportu:', error);
+      throw new Error(`Nie udało się zaktualizować raportu: ${error.message}`);
     }
   };
 
@@ -218,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         saveReport,
         getSavedReports,
         deleteReport,
+        updateReportPremium,
       }}
     >
       {children}

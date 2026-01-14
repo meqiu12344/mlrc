@@ -14,6 +14,7 @@ export default function ResultsPage() {
   const { requirements, offers, resetForm, setFormData, setRequirements, setOffers } = useFormContext();
   const [isLoading, setIsLoading] = useState(true);
   const [disableAutoSave, setDisableAutoSave] = useState(false);
+  const [reportId, setReportId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // Sprawdź czy użytkownik jest zalogowany
@@ -31,6 +32,7 @@ export default function ResultsPage() {
         const savedReport: SavedReport = JSON.parse(viewingReportStr);
         setFormData(savedReport.formData);
         setRequirements(savedReport.requirements);
+        setReportId(savedReport.id); // Przekaż ID zapisanego raportu
         // Otwieramy istniejący raport – włącz tryb tylko-do-odczytu (bez autozapisu)
         setDisableAutoSave(true);
         // Offers są generowane na żywo, nie przechowujemy ich
@@ -88,6 +90,7 @@ export default function ResultsPage() {
           offers={offers}
           onRestart={handleRestart}
           disableAutoSave={disableAutoSave}
+          reportId={reportId}
         />
       </main>
     </div>
