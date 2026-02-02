@@ -2,9 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Metadata } from 'next';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import FeaturesSection from './components/FeaturesSection';
+import BenefitsSection from './components/BenefitsSection';
+import TestimonialsSection from './components/TestimonialsSection';
+import FAQSection from './components/FAQSection';
+import CTASection from './components/CTASection';
 import ContactSection from './components/ContactSection';
 import Footer from './components/Footer';
 import { useFormContext } from './context/FormContext';
@@ -49,6 +54,10 @@ export default function Home() {
       <main>
         <Hero onStartClick={handleStart} />
         <FeaturesSection />
+        <BenefitsSection />
+        <TestimonialsSection />
+        <FAQSection />
+        <CTASection onStartClick={handleStart} />
         <ContactSection />
       </main>
 

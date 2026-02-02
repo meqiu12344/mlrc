@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
-import { FormData, CalculatedRequirements, CarOffer } from '../types';
+import { FormData, CalculatedRequirements } from '../types';
 
 interface FormContextType {
   formData: FormData;
@@ -10,8 +10,6 @@ interface FormContextType {
   setCurrentStep: (step: number) => void;
   requirements: CalculatedRequirements | null;
   setRequirements: (reqs: CalculatedRequirements | null) => void;
-  offers: CarOffer[];
-  setOffers: (offers: CarOffer[]) => void;
   resetForm: () => void;
 }
 
@@ -56,13 +54,11 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
   const [formData, setFormData] = useState<FormData>(defaultFormData);
   const [currentStep, setCurrentStep] = useState(1);
   const [requirements, setRequirements] = useState<CalculatedRequirements | null>(null);
-  const [offers, setOffers] = useState<CarOffer[]>([]);
 
   const resetForm = () => {
     setFormData(defaultFormData);
     setCurrentStep(1);
     setRequirements(null);
-    setOffers([]);
   };
 
   return (
@@ -74,8 +70,6 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
         setCurrentStep,
         requirements,
         setRequirements,
-        offers,
-        setOffers,
         resetForm
       }}
     >

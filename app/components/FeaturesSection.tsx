@@ -1,5 +1,7 @@
 'use client';
 
+import { Car, Zap, DollarSign, Users, BriefcaseBusiness, ShieldQuestionMark } from 'lucide-react';
+
 export default function FeaturesSection() {
   return (
     <section id="cechy" className="py-32 px-6">
@@ -132,7 +134,9 @@ export default function FeaturesSection() {
           <div className="grid md:grid-cols-3 gap-8">
             {/* Persona 1 */}
             <div className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-4xl mb-4">👨‍👩‍👧‍👦</div>
+              <div className="text-4xl mb-4">
+                <Users className="w-10 h-10 text-gray-900" />
+              </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-3">Rodziny</h4>
               <p className="text-gray-600 font-light">
                 Szukają bezpiecznego, spacernistanego samochodu dla całej rodziny. Potrzebują większej przestrzeni i niezawodności.
@@ -141,7 +145,9 @@ export default function FeaturesSection() {
 
             {/* Persona 2 */}
             <div className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-4xl mb-4">💼</div>
+              <div className="text-4xl mb-4">
+                <BriefcaseBusiness className="w-10 h-10 text-gray-900" />
+              </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-3">Pracownicy biurowi</h4>
               <p className="text-gray-600 font-light">
                 Potrzebują auta na codzienne dojeżdżanie, ekonomiczne i wygodne. Liczą się koszty paliwa i serwisu.
@@ -150,7 +156,9 @@ export default function FeaturesSection() {
 
             {/* Persona 3 */}
             <div className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-4xl mb-4">🚗</div>
+              <div className="text-4xl mb-4">
+                <Car className="w-10 h-10 text-gray-900" />
+              </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-3">Entuzjaści samochodów</h4>
               <p className="text-gray-600 font-light">
                 Chcą samochodu z charakterem, wydajnym i wygodnym. Szukają idealnego balansu między stylem a funkcjonalnością.
@@ -159,7 +167,9 @@ export default function FeaturesSection() {
 
             {/* Persona 4 */}
             <div className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-4xl mb-4">🏞️</div>
+              <div className="text-4xl mb-4">
+                <Zap className="w-10 h-10 text-gray-900" />
+              </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-3">Osoby aktywne</h4>
               <p className="text-gray-600 font-light">
                 Podróżują, grają w sporty, bywają w trudnych warunkach. Potrzebują auto wszechstronne i wytrzymałe.
@@ -168,7 +178,9 @@ export default function FeaturesSection() {
 
             {/* Persona 5 */}
             <div className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-4xl mb-4">💰</div>
+              <div className="text-4xl mb-4">
+                <DollarSign className="w-10 h-10 text-gray-900" />
+              </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-3">Świadomi budżetu</h4>
               <p className="text-gray-600 font-light">
                 Mają ograniczony budżet i chcą maksimum wartości. Szukają najlepszych ofert za rozsądne pieniądze.
@@ -177,7 +189,9 @@ export default function FeaturesSection() {
 
             {/* Persona 6 */}
             <div className="bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="text-4xl mb-4">🤔</div>
+              <div className="text-4xl mb-4">
+                <ShieldQuestionMark className="w-10 h-10 text-gray-900" />
+              </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-3">Pierwsi kupujący</h4>
               <p className="text-gray-600 font-light">
                 Bez doświadczenia, zagubjeni w wyborze. Potrzebują przewodnika, którego da się zaufać.

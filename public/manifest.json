@@ -1,0 +1,51 @@
+{
+  "name": "My Little Red Car - Raport do kupna samochodu",
+  "short_name": "My Little Red Car",
+  "description": "Narzędzie decyzyjne do kupna samochodu - Analiza potrzeb, rekomendacje modeli, szacowanie kosztów",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#b85450",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "screenshots": [
+    {
+      "src": "/screenshot-540.png",
+      "sizes": "540x720",
+      "form_factor": "narrow",
+      "type": "image/png"
+    },
+    {
+      "src": "/screenshot-1080.png",
+      "sizes": "1080x1440",
+      "form_factor": "wide",
+      "type": "image/png"
+    }
+  ]
+}

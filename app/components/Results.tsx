@@ -1,26 +1,29 @@
 'use client';
 
 import { useState, useEffect, useRef, type ReactNode } from 'react';
-import { CalculatedRequirements, CarOffer } from '../types';
+import { CalculatedRequirements, CarOffer, CarModel } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { Car, BarChart3, Wallet, Home, Star, Snowflake, Wind, Zap, Info, Clock, DollarSign, Shield, Wrench, Settings, Download, ChevronDown, Lock, Fuel, Target, Save, MapPin, CheckCircle } from 'lucide-react';
 import { useFormContext } from '../context/FormContext';
  
 
 interface ResultsProps {
   requirements: CalculatedRequirements;
-  offers: CarOffer[];
   onRestart: () => void;
   disableAutoSave?: boolean;
   reportId?: string; // ID zapisanego raportu (jeśli otwieramy istniejący)
 }
 
-export default function Results({ requirements, offers, onRestart, disableAutoSave = false, reportId: initialReportId }: ResultsProps) {
+export default function Results({ requirements, onRestart, disableAutoSave = false, reportId: initialReportId }: ResultsProps) {
   const [reportSaved, setReportSaved] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const [reportId, setReportId] = useState<string | undefined>(initialReportId);
   const [hasAccess, setHasAccess] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [recommendedCars, setRecommendedCars] = useState<CarModel[]>([]);
+  const [carsLoading, setCarsLoading] = useState(false);
+  const [carsError, setCarsError] = useState<string | null>(null);
   const { user, saveReport, updateReportPremium, getSavedReports } = useAuth();
   const { formData } = useFormContext();
   const hasAutoSavedRef = useRef(false); // chroni przed wielokrotnym autozapisem
@@ -32,6 +35,37 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
       setReportId(initialReportId);
     }
   }, [initialReportId]);
+
+  // Pobierz rekomendowane samochody z API
+  useEffect(() => {
+    const fetchRecommendedCars = async () => {
+      setCarsLoading(true);
+      setCarsError(null);
+      try {
+        const response = await fetch('/api/search-cars', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ requirements }),
+        });
+        
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || 'Nie udało się pobrać rekomendacji samochodów');
+        }
+        
+        const data = await response.json();
+        setRecommendedCars(data.cars || []);
+      } catch (error) {
+        console.error('Błąd pobierania rekomendacji:', error);
+        setRecommendedCars([]);
+        setCarsError('Nie udało się pobrać rekomendacji z bazy. Spróbuj ponownie lub zmień kryteria.');
+      } finally {
+        setCarsLoading(false);
+      }
+    };
+
+    fetchRecommendedCars();
+  }, [requirements]);
  
   useEffect(() => {
     const checkPremiumStatus = async () => {
@@ -279,9 +313,10 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
             <div className="mt-4">
               <button
                 onClick={() => handleSaveReport()}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+                className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center gap-2"
               >
-                💾 Zapisz raport ponownie
+                <Save className="w-5 h-5" />
+                Zapisz raport ponownie
               </button>
             </div>
           )}
@@ -311,7 +346,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
                   <div className="relative">
                     <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                       <div className="p-1.5 sm:p-2 bg-gradient-to-br from-rose-500 to-pink-600 rounded-lg shadow-md">
-                        <span className="text-xl sm:text-2xl">🔧</span>
+                        <Wrench className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                       </div>
                       <div className="text-xs text-rose-700 font-bold uppercase tracking-wider">Silnik</div>
                     </div>
@@ -335,7 +370,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
                   <div className="relative">
                     <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                       <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg shadow-md">
-                        <span className="text-xl sm:text-2xl">⛽</span>
+                        <Fuel className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
                       <div className="text-xs text-blue-700 font-bold uppercase tracking-wider">Paliwo</div>
                     </div>
@@ -356,7 +391,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
                   <div className="relative">
                     <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                       <div className="p-1.5 sm:p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-md">
-                        <span className="text-xl sm:text-2xl">🚗</span>
+                        <Car className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
                       <div className="text-xs text-emerald-700 font-bold uppercase tracking-wider">Nadwozie</div>
                     </div>
@@ -376,24 +411,24 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
           {/* SEKCJA 2: Twój Profil */}
           <div className="mb-10 pb-8 border-b-2 border-gray-200">
             <h3 className="text-2xl font-light text-gray-900 mb-5 flex items-center gap-2">
-              <span className="text-2xl">👤</span>
+              <Home className="w-6 h-6" />
               <span>Twój Profil</span>
             </h3>
             
             <div className="grid md:grid-cols-4 gap-4">
               <div className="bg-white/80 p-4 rounded-lg border border-gray-200">
-                <div className="text-xs text-gray-500 mb-1">💰 Dochód</div>
+                <div className="text-xs text-gray-500 mb-1 flex items-center gap-1"><DollarSign className="w-4 h-4" />Dochód</div>
                 <div className="text-xl font-bold text-gray-900">{formData.monthlyIncome.toLocaleString()} zł</div>
               </div>
 
               <div className="bg-white/80 p-4 rounded-lg border border-gray-200">
-                <div className="text-xs text-gray-500 mb-1">🚗 Przebieg</div>
+                <div className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Car className="w-4 h-4" />Przebieg</div>
                 <div className="text-xl font-bold text-gray-900">{formData.dailyKmDriven} km/dzień</div>
                 <div className="text-xs text-gray-600">≈ {(formData.dailyKmDriven * 250).toLocaleString()} km/rok</div>
               </div>
 
               <div className="bg-white/80 p-4 rounded-lg border border-gray-200">
-                <div className="text-xs text-gray-500 mb-1">👨‍👩‍👧‍👦 Rodzina</div>
+                <div className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Home className="w-4 h-4" />Rodzina</div>
                 <div className="text-xl font-bold text-gray-900">
                   {formData.householdSize} {formData.householdSize === 1 ? 'os.' : formData.householdSize < 5 ? 'os.' : 'os.'}
                 </div>
@@ -403,7 +438,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
               </div>
 
               <div className="bg-white/80 p-4 rounded-lg border border-gray-200">
-                <div className="text-xs text-gray-500 mb-1">⭐ Priorytet</div>
+                <div className="text-xs text-gray-500 mb-1 flex items-center gap-1"><Star className="w-4 h-4" />Priorytet</div>
                 <div className="text-lg font-bold text-gray-900">
                   {formData.mainConcern === 'economy' ? 'Oszczędność' : 
                    formData.mainConcern === 'reliability' ? 'Niezawodność' : 
@@ -419,7 +454,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
               <div className="grid md:grid-cols-4 gap-3 text-sm">
                 {formData.winterConditions && (
                   <div className="flex items-center gap-2">
-                    <span>❄️</span>
+                    <Snowflake className="w-4 h-4" />
                     <span className="text-gray-700">
                       {formData.winterConditions === 'none' ? 'Łagodne zimy' : 
                        formData.winterConditions === 'mild' ? 'Normalne zimy' : 
@@ -430,7 +465,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
                 )}
                 {formData.roadType && (
                   <div className="flex items-center gap-2">
-                    <span>🛣️</span>
+                    <Wind className="w-4 h-4" />
                     <span className="text-gray-700">
                       {formData.roadType === 'paved' ? 'Asfalt' : 
                        formData.roadType === 'occasional-dirt' ? 'Czasem szutry' : 
@@ -440,7 +475,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
                 )}
                 {formData.hilliness && (
                   <div className="flex items-center gap-2">
-                    <span>⛰️</span>
+                    <Zap className="w-4 h-4" />
                     <span className="text-gray-700">
                       {formData.hilliness === 'flat' ? 'Płaski teren' : 
                        formData.hilliness === 'moderate' ? 'Pagórkowaty' : 
@@ -536,7 +571,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
           {/* SEKCJA 4: Dodatkowe informacje - kompaktowo */}
           <div>
             <h3 className="text-2xl font-light text-gray-900 mb-5 flex items-center gap-2">
-              <span className="text-2xl">ℹ️</span>
+              <Info className="w-6 h-6" />
               <span>Inne informacje</span>
             </h3>
             
@@ -545,20 +580,23 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
                 <div className="text-xs text-gray-500 mb-3 font-semibold uppercase">Doświadczenie</div>
                 <div className="space-y-2 text-sm">
                   {formData.mechanicalSkills && (
-                    <div className="text-gray-700">
-                      🔧 Naprawy: {formData.mechanicalSkills === 'none' ? 'Tylko warsztat' : 
+                    <div className="text-gray-700 flex items-center gap-2">
+                      <Wrench className="w-4 h-4" />
+                      Naprawy: {formData.mechanicalSkills === 'none' ? 'Tylko warsztat' : 
                                    formData.mechanicalSkills === 'basic' ? 'Podstawowe' : 'Zaawansowane'}
                     </div>
                   )}
                   {formData.plannedOwnership && (
-                    <div className="text-gray-700">
-                      ⏱️ Okres: {formData.plannedOwnership === 'short' ? '1-3 lata' : 
+                    <div className="text-gray-700 flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      Okres: {formData.plannedOwnership === 'short' ? '1-3 lata' : 
                                  formData.plannedOwnership === 'medium' ? '3-7 lat' : '7+ lat'}
                     </div>
                   )}
                   {formData.accelerationImportance && (
-                    <div className="text-gray-700">
-                      ⚡ Przyspieszanie: {formData.accelerationImportance === 'low' ? 'Mało ważne' : 
+                    <div className="text-gray-700 flex items-center gap-2">
+                      <Zap className="w-4 h-4" />
+                      Przyspieszanie: {formData.accelerationImportance === 'low' ? 'Mało ważne' : 
                                          formData.accelerationImportance === 'medium' ? 'Średnio' : 'Bardzo ważne'}
                     </div>
                   )}
@@ -569,34 +607,40 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
                 <div className="text-xs text-gray-500 mb-3 font-semibold uppercase">Twoje Decyzje</div>
                 <div className="space-y-2 text-sm">
                   {formData.fuelTypePreference && (
-                    <div className="text-gray-700">
-                      ⛽ Paliwo: {
+                    <div className="text-gray-700 flex items-center gap-2">
+                      <Wallet className="w-4 h-4" />
+                      Paliwo: {
                         formData.fuelTypePreference === 'open'
                           ? `${requirements.recommendedFuelType} (rekomendacja)`
-                          : '🎯 Własny wybór'
+                          : 'Własny wybór'
                       }
                     </div>
                   )}
                   {formData.bodyStylePreference && (
-                    <div className="text-gray-700">
-                      🚗 Nadwozie: {
+                    <div className="text-gray-700 flex items-center gap-2">
+                      <Car className="w-4 h-4" />
+                      Nadwozie: {
                         formData.bodyStylePreference === 'open'
                           ? `${(requirements.recommendedBodyStyles || []).join(', ') || requirements.recommendedBodyStyle}`
-                          : '🎯 Własny wybór'
+                          : 'Własny wybór'
                       }
                     </div>
                   )}
                   {formData.engineSizePreference && (
-                    <div className="text-gray-700">
-                      🔧 Silnik: {
+                    <div className="text-gray-700 flex items-center gap-2">
+                      <Wrench className="w-4 h-4" />
+                      Silnik: {
                         formData.engineSizePreference === 'open'
                           ? `${requirements.optimalEngineSize} cc, ~${requirements.recommendedPower} KM`
-                          : '🎯 Własny wybór'
+                          : 'Własny wybór'
                       }
                     </div>
                   )}
                   {formData.olxRegion && (
-                    <div className="text-gray-700">📍 Region: {formData.olxRegion}</div>
+                    <div className="text-gray-700 flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      Region: {formData.olxRegion}
+                    </div>
                   )}
                 </div>
               </div>
@@ -610,7 +654,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
         <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-10 lg:p-14 mb-6 sm:mb-8 md:mb-10 border border-white/50 shadow-2xl shadow-amber-500/10 hover:shadow-amber-500/20 transition-shadow duration-500">
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-10">
             <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg sm:rounded-xl shadow-lg shadow-amber-500/30 flex-shrink-0">
-              <span className="text-2xl sm:text-3xl">💰</span>
+              <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
               Roczne Koszty Utrzymania
@@ -653,7 +697,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
         <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-10 lg:p-14 mb-6 sm:mb-8 md:mb-10 border border-white/50 shadow-2xl shadow-red-500/10 hover:shadow-red-500/20 transition-shadow duration-500">
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-10">
             <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-red-400 to-rose-500 rounded-lg sm:rounded-xl shadow-lg shadow-red-500/30 flex-shrink-0">
-              <span className="text-2xl sm:text-3xl">🛡️</span>
+              <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
               Bezpieczeństwo i Komfort
@@ -666,7 +710,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
               <ul className="space-y-2">
                 {requirements.recommendedSafetyFeatures.map((feature, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-green-600 font-bold">✓</span>
+                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
                     <span className="text-gray-700">{feature}</span>
                   </li>
                 ))}
@@ -717,7 +761,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
         <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-10 lg:p-14 mb-6 sm:mb-8 md:mb-10 border border-white/50 shadow-2xl shadow-teal-500/10 hover:shadow-teal-500/20 transition-shadow duration-500">
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-10">
             <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-lg sm:rounded-xl shadow-lg shadow-teal-500/30 flex-shrink-0">
-              <span className="text-2xl sm:text-3xl">🛠️</span>
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
             </div>
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
               Rekomendowane Akcesoria i Akcje
@@ -742,7 +786,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
               <ul className="space-y-2">
                 {requirements.activityRecommendations.map((activity, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-green-600">⚙️</span>
+                    <Settings className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
                     <span className="text-gray-700">{activity}</span>
                   </li>
                 ))}
@@ -793,7 +837,7 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
         <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:pb-10 md:pt-10 lg:p-14 mb-6 sm:mb-8 md:mb-10 border border-white/50 shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-shadow duration-500">
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-10">
             <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-purple-400 to-fuchsia-500 rounded-lg sm:rounded-xl shadow-lg shadow-purple-500/30 flex-shrink-0">
-              <span className="text-2xl sm:text-3xl">🎯</span>
+              <Target className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
             <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-purple-600 to-fuchsia-600 bg-clip-text text-transparent">
               Personalne Rekomendacje
@@ -848,6 +892,44 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
           </div>
         </div>
         </Paywall>
+
+        {/* REKOMENDOWANE MODELE SAMOCHODÓW - DARMOWA WERSJA */}
+        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-10 lg:p-14 mb-6 sm:mb-8 md:mb-10 border border-white/50 shadow-2xl shadow-blue-500/10 hover:shadow-blue-500/20 transition-shadow duration-500">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-10">
+            <div className="p-2 sm:p-2.5 md:p-3 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-lg sm:rounded-xl shadow-lg shadow-blue-500/30 flex-shrink-0">
+              <Car className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+            </div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              Rekomendowane modele (CEPiK)
+            </h2>
+          </div>
+
+          {carsLoading ? (
+            <div className="flex items-center justify-center py-10 text-gray-700">Ładowanie rekomendacji...</div>
+          ) : carsError ? (
+            <div className="text-center py-10 text-rose-600">{carsError}</div>
+          ) : recommendedCars.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recommendedCars.map((car, index) => (
+                <div key={car.id || index} className="p-4 bg-gradient-to-br from-white to-blue-50/60 border border-blue-100 rounded-xl shadow-sm hover:shadow-md transition">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-semibold text-gray-900">{car.brand} {car.model}</div>
+                    <div className="text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700">{car.rating}%</div>
+                  </div>
+                  <div className="text-xs text-gray-600 space-y-1">
+                    {car.year ? <div>Rok: {car.year}</div> : null}
+                    {car.fuelType ? <div>Paliwo: {car.fuelType}</div> : null}
+                    {car.power ? <div>Moc: {car.power} KM</div> : null}
+                    {car.seats ? <div>Miejsca: {car.seats}</div> : null}
+                    {car.bodyType ? <div>Nadwozie: {car.bodyType}</div> : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-600">Brak wyników dla podanych kryteriów.</div>
+          )}
+        </div>
 
         {/* FULL ANALYSIS */}
         <Paywall>
@@ -980,100 +1062,6 @@ export default function Results({ requirements, offers, onRestart, disableAutoSa
               </ul>
             </div>
           )}
-        </div>
-        </Paywall>
-
-        {/* ALTERNATYWNE MODELE */}
-        <Paywall>
-        <div className="bg-white/90 backdrop-blur-2xl rounded-2xl sm:rounded-3xl lg:rounded-[32px] p-4 sm:p-6 md:p-10 lg:p-16 mb-6 sm:mb-8 md:mb-12 border border-white/50 shadow-2xl shadow-blue-500/10 hover:shadow-blue-500/20 transition-shadow duration-500">
-          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 md:mb-12">
-            <div className="p-2 sm:p-3 md:p-4 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/30 flex-shrink-0">
-              <span className="text-2xl sm:text-3xl md:text-4xl">🚗</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Przykładowe Modele
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
-            {[
-              { model: 'Toyota Corolla', variant: '2020 | 45k km', year: 2020, mileage: 45000, price: 65000, fuel: 'Benzyna', engine: '1.6L', power: 130, color: 'from-blue-500 to-blue-600' },
-              { model: 'Honda Civic', variant: '2019 | 62k km', year: 2019, mileage: 62000, price: 58000, fuel: 'Benzyna', engine: '1.5L', power: 128, color: 'from-indigo-500 to-indigo-600' },
-              { model: 'Mazda3', variant: '2021 | 32k km', year: 2021, mileage: 32000, price: 72000, fuel: 'Benzyna', engine: '2.0L', power: 150, color: 'from-purple-500 to-purple-600' },
-              { model: 'Hyundai i30', variant: '2018 | 78k km', year: 2018, mileage: 78000, price: 45000, fuel: 'Diesel', engine: '1.6L', power: 110, color: 'from-cyan-500 to-blue-500' },
-            ]
-            .map((offer) => ({
-              ...offer,
-              matchPercentage: calculateMatchPercentage(offer, requirements)
-            }))
-            .sort((a, b) => b.matchPercentage - a.matchPercentage)
-            .map((offer, i) => {
-              const matchColor = offer.matchPercentage >= 80 ? 'text-green-600' : offer.matchPercentage >= 60 ? 'text-yellow-600' : 'text-orange-600';
-              const matchBgColor = offer.matchPercentage >= 80 ? 'bg-green-50 border-green-200' : offer.matchPercentage >= 60 ? 'bg-yellow-50 border-yellow-200' : 'bg-orange-50 border-orange-200';
-              
-              return (
-              <div key={i} className="group relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 hover:scale-105">
-                {/* Gradient header */}
-                <div className={`bg-gradient-to-r ${offer.color} h-24 relative overflow-hidden`}>
-                  <div className="absolute inset-0 opacity-10 bg-pattern"></div>
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full -mr-10 -mt-10 opacity-10 group-hover:scale-150 transition-transform duration-300"></div>
-                  {/* Match percentage badge */}
-                  <div className={`absolute top-4 right-4 ${matchBgColor} border rounded-lg px-3 py-2`}>
-                    <div className="text-xs font-bold text-gray-700">Zgodność</div>
-                    <div className={`text-xl font-bold ${matchColor}`}>{offer.matchPercentage}%</div>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="relative -mt-12 px-6 pb-6 pt-4">
-                  <div className="bg-white rounded-xl p-4 mb-4 shadow-lg">
-                    <div className="text-2xl font-bold text-gray-900 mb-1">{offer.model}</div>
-                    <div className="text-sm text-gray-500 font-medium">{offer.variant}</div>
-                  </div>
-
-                  {/* Price highlight */}
-                  <div className="bg-gradient-to-r from-orange-100 to-red-100 rounded-xl p-4 mb-4 border border-orange-200">
-                    <div className="text-xs text-gray-600 font-semibold mb-1 uppercase tracking-wide">Cena</div>
-                    <div className="text-3xl font-bold text-orange-600">{(offer.price / 1000).toFixed(0)}k zł</div>
-                  </div>
-
-                  {/* Stats grid */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200">
-                      <div className="text-xs text-gray-600 font-semibold mb-1 flex items-center gap-1">
-                        <span>⛽</span> Paliwo
-                      </div>
-                      <div className="text-sm font-bold text-gray-900">{offer.fuel}</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200">
-                      <div className="text-xs text-gray-600 font-semibold mb-1 flex items-center gap-1">
-                        <span>⚙️</span> Silnik
-                      </div>
-                      <div className="text-sm font-bold text-gray-900">{offer.engine}</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200">
-                      <div className="text-xs text-gray-600 font-semibold mb-1 flex items-center gap-1">
-                        <span>🏎️</span> Moc
-                      </div>
-                      <div className="text-sm font-bold text-gray-900">{offer.power} KM</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 rounded-lg border border-gray-200">
-                      <div className="text-xs text-gray-600 font-semibold mb-1 flex items-center gap-1">
-                        <span>📊</span> Przebieg
-                      </div>
-                      <div className="text-sm font-bold text-gray-900">{(offer.mileage / 1000).toFixed(0)}k km</div>
-                    </div>
-                  </div>
-
-                  {/* Button */}
-                  <button className={`w-full py-3 px-4 rounded-xl font-bold text-white transition-all duration-300 transform group-hover:shadow-lg bg-gradient-to-r ${offer.color} hover:opacity-90`}>
-                    Pokaż ofertę →
-                  </button>
-                </div>
-              </div>
-            );
-            })}
-          </div>        
         </div>
         </Paywall>
 

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
+import { BarChart3, Plus, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   onLogoClick?: () => void;
@@ -45,16 +46,17 @@ export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
           {/* Logo */}
           <button 
             onClick={onLogoClick}
-            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity flex-shrink-0"
           >
-            <div className="w-8 h-8 rounded-full bg-[#b85450] flex items-center justify-center">
-              <span className="text-white font-bold text-sm">🚗</span>
-            </div>
-            <span className="text-lg font-semibold text-gray-900">MLRC</span>
+            <img 
+              src="/logo.png" 
+              alt="MLRC Logo" 
+              className="h-10 w-auto"
+            />
           </button>
 
-          {/* Menu */}
-          <div className="hidden md:flex items-center gap-12">
+          {/* Menu - Center */}
+          <div className="hidden md:flex items-center gap-12 flex-1 justify-center">
             <button 
               onClick={() => handleNavigateToSection('jak-dziala')}
               className="text-gray-700 hover:text-[#b85450] transition-colors font-light"
@@ -75,17 +77,14 @@ export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
             </button>
           </div>
 
-          {/* Auth Section */}
-          <div className="flex items-center gap-4">
+          {/* Auth Section - Right */}
+          <div className="flex items-center gap-4 flex-shrink-0">
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                 >
-                  <div className="w-6 h-6 rounded-full bg-[#b85450] flex items-center justify-center text-white text-xs font-bold">
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
                   <span className="text-sm font-medium text-gray-900">{user.name}</span>
                   <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -96,22 +95,25 @@ export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
                     <button
                       onClick={handleProfileClick}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
                     >
-                      📊 Mój profil
+                      <BarChart3 className="w-4 h-4" />
+                      Mój profil
                     </button>
                     <button
                       onClick={() => router.push('/wizard')}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
                     >
-                      ✨ Nowy raport
+                      <Plus className="w-4 h-4" />
+                      Nowy raport
                     </button>
                     <hr className="my-2" />
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
                     >
-                      🚪 Wyloguj się
+                      <LogOut className="w-4 h-4" />
+                      Wyloguj się
                     </button>
                   </div>
                 )}
@@ -120,16 +122,9 @@ export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
               <>
                 <button
                   onClick={() => router.push('/login')}
-                  className="px-6 py-2 text-gray-700 hover:text-[#b85450] transition-colors font-medium text-sm"
+                  className="px-6 py-2 text-gray-700 bg-gradient-to-r from-[#b85450] to-[#9d4540] text-white rounded-3xl transition-colors font-medium text-sm"
                 >
                   Zaloguj się
-                </button>
-                <button 
-                  onClick={() => router.push('/login')}
-                  className="px-8 py-2 bg-[#b85450] text-white rounded-full font-medium 
-                           hover:bg-[#a04946] transition-colors text-sm"
-                >
-                  Zacznij
                 </button>
               </>
             )}

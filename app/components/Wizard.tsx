@@ -848,8 +848,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
               <p className="text-gray-600 mb-8">Wybierz czy chcesz otwartą rekomendację czy konkretne paliwo</p>
               <div className="space-y-3">
                 {[
-                  { value: 'open', label: '🤖 Niech algorytm zdecyduje', desc: 'Rekomendacja na podstawie Twoich nawyków' },
-                  { value: 'specified', label: '🎯 Mam preferencję', desc: 'Chcę wybrać konkretne paliwo' }
+                  { value: 'open', label: 'Niech algorytm zdecyduje', desc: 'Rekomendacja na podstawie Twoich nawyków' },
+                  { value: 'specified', label: 'Mam preferencję', desc: 'Chcę wybrać konkretne paliwo' }
                 ].map(opt => (
                   <button
                     key={opt.value}
@@ -877,8 +877,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
               <p className="text-gray-600 mb-8">Wybierz czy chcesz otwartą rekomendację czy konkretny typ</p>
               <div className="space-y-3">
                 {[
-                  { value: 'open', label: '🤖 Niech algorytm zdecyduje', desc: 'Rekomendacja na podstawie Twoich potrzeb' },
-                  { value: 'specified', label: '🎯 Mam preferencję', desc: 'Chcę wybrać konkretny typ nadwozia' }
+                  { value: 'open', label: 'Niech algorytm zdecyduje', desc: 'Rekomendacja na podstawie Twoich potrzeb' },
+                  { value: 'specified', label: 'Mam preferencję', desc: 'Chcę wybrać konkretny typ nadwozia' }
                 ].map(opt => (
                   <button
                     key={opt.value}
@@ -906,8 +906,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
               <p className="text-gray-600 mb-8">Algorytm obliczy optymalną pojemność - czy chcesz jej słuchać?</p>
               <div className="space-y-3">
                 {[
-                  { value: 'open', label: '🤖 Zaufam algorytmowi', desc: 'Rekomendacja na podstawie Twoich nawyków' },
-                  { value: 'specified', label: '🎯 Mam preferencję', desc: 'Chcę konkretną pojemność (np. mały silnik)' }
+                  { value: 'open', label: 'Zaufam algorytmowi', desc: 'Rekomendacja na podstawie Twoich nawyków' },
+                  { value: 'specified', label: 'Mam preferencję', desc: 'Chcę konkretną pojemność (np. mały silnik)' }
                 ].map(opt => (
                   <button
                     key={opt.value}

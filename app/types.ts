@@ -254,3 +254,30 @@ export interface AuthCredentials {
   password: string;
   name?: string; // Tylko dla rejestracji
 }
+
+// Model samochodu z API
+export interface CarModel {
+  id: string;
+  brand: string;
+  model: string;
+  variant: string;
+  year: number;
+  bodyType: string;
+  fuelType: string;
+  power: number; // KM
+  torque: number; // Nm
+  acceleration: number; // 0-100 km/h w sekundach
+  trunkCapacity: number; // litry
+  trunkCapacityMax?: number; // litry ze złożonymi siedzeniami
+  seats: number;
+  hasThirdRow: boolean;
+  length: number; // mm
+  width: number; // mm
+  height: number; // mm
+  fuelConsumption: number; // l/100km
+  co2: number; // g/km
+  price: number; // PLN
+  imageUrl: string;
+  features: string[];
+  rating: number; // 0-100 (dopasowanie)
+}

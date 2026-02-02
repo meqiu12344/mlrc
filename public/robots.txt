@@ -1,0 +1,17 @@
+# Robots.txt dla My Little Red Car
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+Disallow: /checkout/
+Disallow: /*.pdf
+Disallow: /search?
+Disallow: /login
+Disallow: /payment/
+
+# Crawl delay
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://myliitleredcar.pl/sitemap.xml

@@ -7,7 +7,6 @@ import Header from '../components/Header';
 import { useFormContext } from '../context/FormContext';
 import { useAuth } from '../context/AuthContext';
 import { calculateRequirements } from '../utils/calculator';
-import { searchOtomoto } from '../utils/otomoto-api';
 
 export default function WizardPage() {
   const router = useRouter();
@@ -18,7 +17,6 @@ export default function WizardPage() {
     currentStep,
     setCurrentStep,
     setRequirements,
-    setOffers,
     resetForm
   } = useFormContext();
 
@@ -50,10 +48,7 @@ export default function WizardPage() {
     const calculatedReqs = calculateRequirements(formData);
     setRequirements(calculatedReqs);
     
-    const budget = calculatedReqs.recommendedBudget || formData.monthlyIncome * 10 || 50000;
-    const otomotoOffers = await searchOtomoto(calculatedReqs, budget);
-    setOffers(otomotoOffers);
-    
+    // Przekieruj do strony wyników
     router.push('/results');
   };
 

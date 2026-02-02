@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '../components/Header';
+import { BarChart3, Save, Lock } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
@@ -15,11 +16,12 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Jeśli użytkownik jest już zalogowany, przekieruj go
-  if (user) {
-    router.push('/wizard');
-    return null;
-  }
+  // Jeśli użytkownik jest już zalogowany, przekieruj go w efekcie
+  useEffect(() => {
+    if (user) {
+      router.push('/wizard');
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,8 +31,6 @@ export default function LoginPage() {
     try {
       if (mode === 'login') {
         await login(email, password);
-        // Po zalogowaniu przejdź do wizarda
-        router.push('/wizard');
       } else {
         if (!name) {
           setError('Podaj swoje imię');
@@ -38,8 +38,6 @@ export default function LoginPage() {
           return;
         }
         await register(email, password, name);
-        // Po rejestracji przejdź do wizarda
-        router.push('/wizard');
       }
     } catch (err: any) {
       setError(err.message || 'Wystąpił błąd');
@@ -47,6 +45,11 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  // Jeśli użytkownik się loguje, nie renderuj nic (useEffect przesunie go do /wizard)
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f5f5f5] to-[#e8e8e8]">
@@ -214,15 +217,21 @@ export default function LoginPage() {
           {/* Features Info */}
           <div className="mt-8 grid md:grid-cols-3 gap-4">
             <div className="bg-white/60 rounded-lg p-4 text-center">
-              <div className="text-2xl mb-2">📊</div>
+              <div className="flex justify-center mb-2">
+                <BarChart3 className="w-8 h-8 text-gray-900" />
+              </div>
               <p className="text-sm text-gray-700 font-medium">Personalizowane raporty</p>
             </div>
             <div className="bg-white/60 rounded-lg p-4 text-center">
-              <div className="text-2xl mb-2">💾</div>
+              <div className="flex justify-center mb-2">
+                <Save className="w-8 h-8 text-gray-900" />
+              </div>
               <p className="text-sm text-gray-700 font-medium">Zapisz swoje analizy</p>
             </div>
             <div className="bg-white/60 rounded-lg p-4 text-center">
-              <div className="text-2xl mb-2">🔒</div>
+              <div className="flex justify-center mb-2">
+                <Lock className="w-8 h-8 text-gray-900" />
+              </div>
               <p className="text-sm text-gray-700 font-medium">Bezpieczne konto</p>
             </div>
           </div>

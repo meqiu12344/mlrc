@@ -11,7 +11,7 @@ import { SavedReport } from '../types';
 export default function ResultsPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { requirements, offers, resetForm, setFormData, setRequirements, setOffers } = useFormContext();
+  const { requirements, resetForm, setFormData, setRequirements } = useFormContext();
   const [isLoading, setIsLoading] = useState(true);
   const [disableAutoSave, setDisableAutoSave] = useState(false);
   const [reportId, setReportId] = useState<string | undefined>(undefined);
@@ -87,7 +87,6 @@ export default function ResultsPage() {
       <main className="pt-20">
         <Results 
           requirements={requirements}
-          offers={offers}
           onRestart={handleRestart}
           disableAutoSave={disableAutoSave}
           reportId={reportId}

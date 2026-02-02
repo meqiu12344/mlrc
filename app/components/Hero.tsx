@@ -6,7 +6,7 @@ interface HeroProps {
 
 export default function Hero({ onStartClick }: HeroProps) {
   return (
-    <section className="min-h-screen flex items-center justify-center px-6 py-32 pt-32 bg-gradient-to-br from-white via-[#faf5f5] to-white">
+    <section className="min-h-screen flex items-center justify-center px-6 py-32 pt-32 bg-gradient-to-br from-white via-[#faf5f5] to-white" id="hero">
       <div className="max-w-5xl mx-auto text-center">
         {/* Hero Header */}
         <div className="mb-20">

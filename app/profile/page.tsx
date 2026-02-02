@@ -4,13 +4,17 @@ import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Header from '../components/Header';
+import ConfirmModal from '../components/ConfirmModal';
 import { SavedReport } from '../types';
+import { CheckCircle, Star, DollarSign, Calendar, TrendingUp, BarChart3, Eye } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, isLoading, logout, getSavedReports, deleteReport } = useAuth();
   const router = useRouter();
   const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -42,15 +46,21 @@ export default function ProfilePage() {
   };
 
   const handleDeleteReport = async (reportId: string) => {
-    if (confirm('Czy na pewno chcesz usunąć ten raport?')) {
-      try {
-        await deleteReport(reportId);
-        const reports = await getSavedReports();
-        setSavedReports(reports);
-      } catch (error) {
-        console.error('Błąd usuwania raportu:', error);
-        alert('Nie udało się usunąć raportu');
-      }
+    setReportToDelete(reportId);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!reportToDelete) return;
+    
+    try {
+      await deleteReport(reportToDelete);
+      const reports = await getSavedReports();
+      setSavedReports(reports);
+      setDeleteModalOpen(false);
+      setReportToDelete(null);
+    } catch (error) {
+      console.error('Błąd usuwania raportu:', error);
     }
   };
 
@@ -147,40 +157,44 @@ export default function ProfilePage() {
                           <h3 className="font-semibold text-gray-900 text-sm sm:text-base break-words">
                             {report.name || `Raport z ${new Date(report.createdAt).toLocaleDateString('pl-PL')}`}
                           </h3>
-                          <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap">
-                            ✓ Zapisany
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700 whitespace-nowrap flex items-center gap-1 w-fit">
+                            <CheckCircle className="w-4 h-4" />
+                            Zapisany
                           </span>
                           { report.isPremium ? (
-                            <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-700 whitespace-nowrap">
-                              ⭐ Premium
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-700 whitespace-nowrap flex items-center gap-1 w-fit">
+                              <Star className="w-4 h-4" />
+                              Premium
                             </span>
                           ) : (
-                            <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 whitespace-nowrap">
-                              🆓 Darmowy
+                            <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 whitespace-nowrap flex items-center gap-1 w-fit">
+                              <DollarSign className="w-4 h-4" />
+                              Darmowy
                             </span>
                           ) }
                         </div>
                         <div className="text-xs sm:text-sm text-gray-600 space-y-1">
-                          <p className="break-words">📅 Data: {new Date(report.createdAt).toLocaleString('pl-PL', {
+                          <p className="break-words flex items-center gap-2"><Calendar className="w-4 h-4 flex-shrink-0" />Data: {new Date(report.createdAt).toLocaleString('pl-PL', {
                             year: 'numeric',
                             month: 'long', 
                             day: 'numeric',
                             hour: '2-digit',
                             minute: '2-digit'
                           })}</p>
-                          <p>💰 Budżet: {report.requirements.recommendedBudget?.toLocaleString('pl-PL')} PLN</p>
-                          <p>🚗 Bagażnik: {report.requirements.recommendedTrunkCapacity}L</p>
+                          <p className="flex items-center gap-2"><DollarSign className="w-4 h-4 flex-shrink-0" />Budżet: {report.requirements.recommendedBudget?.toLocaleString('pl-PL')} PLN</p>
+                          <p className="flex items-center gap-2"><TrendingUp className="w-4 h-4 flex-shrink-0" />Bagażnik: {report.requirements.recommendedTrunkCapacity}L</p>
                           {report.requirements.recommendedSegments && (
-                            <p className="break-words">📊 Segmenty: {report.requirements.recommendedSegments.join(', ')}</p>
+                            <p className="break-words flex items-center gap-2"><BarChart3 className="w-4 h-4 flex-shrink-0" />Segmenty: {report.requirements.recommendedSegments.join(', ')}</p>
                           )}
                         </div>
                       </div>
                       <div className="flex flex-row sm:flex-row gap-2 w-full sm:w-auto">
                         <button
                           onClick={() => handleViewReport(report)}
-                          className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-blue-700 transition flex-1 sm:flex-none whitespace-nowrap"
+                          className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium hover:bg-blue-700 transition flex-1 sm:flex-none whitespace-nowrap flex items-center justify-center gap-1"
                         >
-                          👁️ Otwórz
+                          <Eye className="w-4 h-4" />
+                          Otwórz
                         </button>
                         <button
                           onClick={() => handleDeleteReport(report.id)}
@@ -197,6 +211,20 @@ export default function ProfilePage() {
           </div>
         </div>
       </main>
+
+      <ConfirmModal
+        isOpen={deleteModalOpen}
+        title="Usuń raport"
+        message="Czy na pewno chcesz usunąć ten raport? Tej czynności nie można cofnąć."
+        confirmText="Usuń"
+        cancelText="Anuluj"
+        isDangerous={true}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setDeleteModalOpen(false);
+          setReportToDelete(null);
+        }}
+      />
     </div>
   );
 }
