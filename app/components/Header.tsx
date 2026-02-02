@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { BarChart3, Plus, LogOut } from 'lucide-react';
+import LanguageSelector from './LanguageSelector';
+import { t } from '../lib/translations';
 
 interface HeaderProps {
   onLogoClick?: () => void;
@@ -12,6 +15,7 @@ interface HeaderProps {
 
 export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
   const { user, logout } = useAuth();
+  const { language } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -61,24 +65,25 @@ export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
               onClick={() => handleNavigateToSection('jak-dziala')}
               className="text-gray-700 hover:text-[#b85450] transition-colors font-light"
             >
-              Jak to działa
+              {t(language, 'nav.howItWorks')}
             </button>
             <button 
               onClick={() => handleNavigateToSection('cechy')}
               className="text-gray-700 hover:text-[#b85450] transition-colors font-light"
             >
-              Cechy
+              {t(language, 'nav.features')}
             </button>
             <button 
               onClick={() => handleNavigateToSection('kontakt')}
               className="text-gray-700 hover:text-[#b85450] transition-colors font-light"
             >
-              Kontakt
+              {t(language, 'nav.contact')}
             </button>
           </div>
 
           {/* Auth Section - Right */}
           <div className="flex items-center gap-4 flex-shrink-0">
+            <LanguageSelector />
             {user ? (
               <div className="relative">
                 <button
@@ -98,14 +103,14 @@ export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
                     >
                       <BarChart3 className="w-4 h-4" />
-                      Mój profil
+                      {t(language, 'nav.myProfile')}
                     </button>
                     <button
                       onClick={() => router.push('/wizard')}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
                     >
                       <Plus className="w-4 h-4" />
-                      Nowy raport
+                      {t(language, 'nav.newReport')}
                     </button>
                     <hr className="my-2" />
                     <button
@@ -113,7 +118,7 @@ export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
                     >
                       <LogOut className="w-4 h-4" />
-                      Wyloguj się
+                      {t(language, 'nav.logout')}
                     </button>
                   </div>
                 )}

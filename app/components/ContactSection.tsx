@@ -2,9 +2,12 @@
 
 import { useState } from 'react';
 import { Mail, Smartphone, Map } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { t } from '../lib/translations';
 
 
 export default function ContactSection() {
+  const { language } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -40,10 +43,10 @@ export default function ContactSection() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Skontaktuj się z nami
+            {t(language, 'contact.title')}
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Masz pytania? Chętnie pomożemy! Wypełnij formularz, a odezwiemy się do Ciebie najszybciej jak to możliwe.
+            {t(language, 'contact.subtitle')}
           </p>
         </div>
 
@@ -52,7 +55,7 @@ export default function ContactSection() {
           <div className="space-y-8">
             <div>
               <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                Dane kontaktowe
+                {t(language, 'contact.contactInfo')}
               </h3>
               
               <div className="space-y-6">
@@ -61,7 +64,7 @@ export default function ContactSection() {
                     <Mail className="w-6 h-6" color="#fff" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Email</h4>
+                    <h4 className="font-semibold text-gray-900 mb-1">{t(language, 'contact.email')}</h4>
                     <a href="mailto:kontakt@mlrc.pl" className="text-gray-600 hover:text-[#b85450] transition-colors">
                       kontakt@mlrc.pl
                     </a>
@@ -73,7 +76,7 @@ export default function ContactSection() {
                     <Smartphone className="w-6 h-6 text-[#fff]" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Telefon</h4>
+                    <h4 className="font-semibold text-gray-900 mb-1">{t(language, 'contact.phone')}</h4>
                     <a href="tel:+48123456789" className="text-gray-600 hover:text-[#b85450] transition-colors">
                       +48 123 456 789
                     </a>
@@ -85,7 +88,7 @@ export default function ContactSection() {
                     <Map className="w-6 h-6 text-[#fff]" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-1">Adres</h4>
+                    <h4 className="font-semibold text-gray-900 mb-1">{t(language, 'contact.address')}</h4>
                     <p className="text-gray-600">
                       ul. Przykładowa 123<br />
                       00-001 Warszawa, Polska
@@ -101,7 +104,7 @@ export default function ContactSection() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Imię i nazwisko
+                  {t(language, 'contact.nameLabel')}
                 </label>
                 <input
                   type="text"
@@ -117,7 +120,7 @@ export default function ContactSection() {
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Adres email
+                  {t(language, 'contact.emailLabel')}
                 </label>
                 <input
                   type="email"
@@ -133,7 +136,7 @@ export default function ContactSection() {
 
               <div>
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                  Wiadomość
+                  {t(language, 'contact.messageLabel')}
                 </label>
                 <textarea
                   id="message"
@@ -143,7 +146,7 @@ export default function ContactSection() {
                   required
                   rows={5}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#b85450] focus:border-transparent transition-all resize-none"
-                  placeholder="Jak możemy Ci pomóc?"
+                  placeholder={t(language, 'contact.messagePlaceholder')}
                 />
               </div>
 
@@ -153,7 +156,7 @@ export default function ContactSection() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <p className="text-sm text-green-800">
-                    Dziękujemy! Wiadomość została wysłana pomyślnie.
+                    {t(language, 'contact.successMessage')}
                   </p>
                 </div>
               )}
@@ -164,7 +167,7 @@ export default function ContactSection() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   <p className="text-sm text-red-800">
-                    Wystąpił błąd. Spróbuj ponownie później.
+                    {t(language, 'contact.errorMessage')}
                   </p>
                 </div>
               )}
@@ -183,14 +186,14 @@ export default function ContactSection() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Wysyłanie...
+                    {t(language, 'contact.submitting')}
                   </>
                 ) : (
                   <>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
-                    Wyślij wiadomość
+                    {t(language, 'contact.sendButton')}
                   </>
                 )}
               </button>

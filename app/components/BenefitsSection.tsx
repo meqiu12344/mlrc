@@ -1,38 +1,41 @@
 'use client';
 
 import { TrendingUp, DollarSign, Clock, Shield, Brain, CheckCircle } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { t } from '../lib/translations';
 
 export default function BenefitsSection() {
+  const { language } = useLanguage();
   const benefits = [
     {
       icon: DollarSign,
-      title: 'Zaoszczędź średnio 12 000 zł',
-      description: 'Unika nierozsądnych wyborów i dodatkowych kosztów dzięki świadomej decyzji'
+      title: t(language, 'benefits.save12k.title'),
+      description: t(language, 'benefits.save12k.desc')
     },
     {
       icon: Clock,
-      title: 'Oszczędź czasu poszukiwań',
-      description: 'Zamiast szukać przez miesiące bez kierunku, wiesz dokładnie co szukasz'
+      title: t(language, 'benefits.time.title'),
+      description: t(language, 'benefits.time.desc')
     },
     {
       icon: Brain,
-      title: 'Zrozum swoje rzeczywiste potrzeby',
-      description: 'Uświadom sobie, co naprawdę jest dla Ciebie ważne, a co to tylko moda'
+      title: t(language, 'benefits.understand.title'),
+      description: t(language, 'benefits.understand.desc')
     },
     {
       icon: Shield,
-      title: 'Kup z pewnością siebie',
-      description: 'Zmniejsz żal po zakupie dzięki świadomemu wyborowi'
+      title: t(language, 'benefits.confidence.title'),
+      description: t(language, 'benefits.confidence.desc')
     },
     {
       icon: TrendingUp,
-      title: 'Lepsza wartość residualna',
-      description: 'Samochody wybrane celowo mają lepszą wartość na rynku wtórnym'
+      title: t(language, 'benefits.value.title'),
+      description: t(language, 'benefits.value.desc')
     },
     {
       icon: CheckCircle,
-      title: 'Wsparcie przy wyborze',
-      description: 'Konkretne modele i warianty zamiast ogólnych rad'
+      title: t(language, 'benefits.support.title'),
+      description: t(language, 'benefits.support.desc')
     }
   ];
 
@@ -41,10 +44,10 @@ export default function BenefitsSection() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-4">
-            Dlaczego nasz raport <span className="font-semibold">zmienia decyzje</span>
+            {t(language, 'benefits.title')} <span className="font-semibold">{t(language, 'benefits.titleHighlight')}</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Konkretne korzyści, które uzyskujesz kupując raport
+            {t(language, 'benefits.subtitle')}
           </p>
         </div>
 
@@ -72,18 +75,18 @@ export default function BenefitsSection() {
 
         <div className="mt-16 bg-gradient-to-r from-[#faf5f5] to-white border border-gray-200 rounded-2xl p-10 md:p-14">
           <h3 className="text-2xl font-semibold text-gray-900 mb-8">
-            Co zawiera Twój raport:
+            {t(language, 'benefits.includes')}
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
             {[
-              'Analiza Twoich rzeczywistych potrzeb',
-              'Wyliczenie optymalnych parametrów',
-              'Konkretne modele dostępne na rynku',
-              'Szacowanie kosztów eksploatacji',
-              'Ranking wariantów pod względem Twoich priorytetów',
-              'Porady na temat negocjowania ceny',
-              'Wskazówki dotyczące inspekcji przed kupnem',
-              'Informacje o gwarancjach i ubezpieczeniach'
+              t(language, 'benefits.item1'),
+              t(language, 'benefits.item2'),
+              t(language, 'benefits.item3'),
+              t(language, 'benefits.item4'),
+              t(language, 'benefits.item5'),
+              t(language, 'benefits.item6'),
+              t(language, 'benefits.item7'),
+              t(language, 'benefits.item8')
             ].map((item, index) => (
               <div key={index} className="flex items-start gap-3">
                 <CheckCircle className="w-6 h-6 text-[#b85450] flex-shrink-0 mt-0.5" />

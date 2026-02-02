@@ -1,8 +1,11 @@
 'use client';
 
 import { Star } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { t } from '../lib/translations';
 
 export default function TestimonialsSection() {
+  const { language } = useLanguage();
   const testimonials = [
     {
       author: 'Magdalena K.',
@@ -39,10 +42,10 @@ export default function TestimonialsSection() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-4">
-            Ufają nam <span className="font-semibold">50 000+ kupujących</span>
+            {t(language, 'testimonials.title')} <span className="font-semibold">{t(language, 'testimonials.titleHighlight')}</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Średnia ocena 4.9/5 - rzeczywiste opinie od rzeczywistych ludzi
+            {t(language, 'testimonials.subtitle')}
           </p>
         </div>
 
