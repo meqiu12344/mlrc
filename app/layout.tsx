@@ -4,7 +4,6 @@ import Script from "next/script";
 import "./globals.css";
 import { FormProvider } from "./context/FormContext";
 import { AuthProvider } from "./context/AuthContext";
-import { LanguageProvider } from "./context/LanguageContext";
 import { SchemaOrgHome } from "./lib/schema-org";
 
 const inter = Inter({
@@ -110,11 +109,9 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <AuthProvider>
-          <LanguageProvider>
-            <FormProvider>
-              {children}
-            </FormProvider>
-          </LanguageProvider>
+          <FormProvider>
+            {children}
+          </FormProvider>
         </AuthProvider>
       </body>
     </html>

@@ -16,14 +16,18 @@ interface FormContextType {
 const FormContext = createContext<FormContextType | undefined>(undefined);
 
 const defaultFormData: FormData = {
-  monthlyIncome: 0,
   maxMonthlyPayment: null,
+  primaryUseLocation: null,
+  tripLength: null,
+  annualKilometers: null,
   dailyCommute: null,
   commuteType: null,
   parkingAtWork: null,
   parkingAtHome: null,
   dailyKmDriven: 0,
   accelerationImportance: null,
+  parkingSkills: null,
+  nightDriving: null,
   householdSize: 1,
   childrenCount: 0,
   childSeats: 0,
@@ -44,10 +48,9 @@ const defaultFormData: FormData = {
   mainConcern: null,
   mechanicalSkills: null,
   plannedOwnership: null,
-  fuelTypePreference: null,
-  bodyStylePreference: null,
-  engineSizePreference: null,
-  olxRegion: null
+  technologyPriority: null,
+  servicePriority: null,
+  ownershipDuration: null
 };
 
 export function FormProvider({ children }: { children: React.ReactNode }) {

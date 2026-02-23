@@ -1,16 +1,20 @@
 // Dane wejściowe - codzienne sytuacje użytkownika
 export interface FormData {
   // Sytuacja finansowa
-  monthlyIncome: number; // Miesięczny dochód gospodarstwa
   maxMonthlyPayment: number | null; // Maks. rata miesięczna
   
   // Codzienna jazda
+  primaryUseLocation: 'city' | 'highway' | 'mixed' | null; // Gdzie najczęściej używane auto
+  tripLength: 'short' | 'medium' | 'long' | null; // Jak długie trasy (do 10km, 10-30km, 30+km)
+  annualKilometers: 'low' | 'medium' | 'high' | null; // Roczny przebieg (poniżej 10k, 10-20k, powyżej 20k)
   dailyCommute: 'none' | 'short' | 'medium' | 'long' | null; // <5km, 5-20km, 20-50km, >50km
   commuteType: 'city' | 'highway' | 'mixed' | null;
   parkingAtWork: 'none' | 'parking' | 'street' | 'tight' | null;
   parkingAtHome: 'garage' | 'driveway' | 'street' | null;
   dailyKmDriven: number; // Ile km dziennie
   accelerationImportance: 'low' | 'medium' | 'high' | null; // Czy lubi szybkie przyspieszanie
+  parkingSkills: 'stressed' | 'confident' | 'easy' | null; // Umiejętności parkowania
+  nightDriving: 'often' | 'rarely' | null; // Czy często jeździ po zmroku
   
   // Rodzina i pasażerowie
   householdSize: number; // Liczba osób w gospodarstwie
@@ -43,14 +47,9 @@ export interface FormData {
   mainConcern: 'economy' | 'reliability' | 'comfort' | 'space' | null;
   mechanicalSkills: 'none' | 'basic' | 'advanced' | null;
   plannedOwnership: 'short' | 'medium' | 'long' | null; // <3, 3-7, >7 lat
-  
-  // Preferencje techniczne (opcjonalne - niech algorithm rekomenduje)
-  fuelTypePreference: 'open' | 'specified' | null; // Czy user chce otwarty wybór czy ma preferncję
-  bodyStylePreference: 'open' | 'specified' | null; // Czy user chce otwarty wybór czy ma preferencję
-  engineSizePreference: 'open' | null; // Czy user ma preferencję co do pojemności
-  
-  // Wyszukiwanie ofert
-  olxRegion: string | null; // Region/województwo do wyszukiwania na OLX
+  technologyPriority: 'carplay' | 'radio' | 'none' | null; // Priorytet technologii (CarPlay/Android Auto)
+  servicePriority: 'cheap' | 'peace-of-mind' | null; // Priorytet przy serwisowaniu
+  ownershipDuration: 'short' | 'long' | null; // Jak długo planuje trzymać (2-3 lata vs 5-10 lat)
 }
 
 // Wyliczone parametry techniczne - wynik analizy
@@ -172,6 +171,194 @@ export interface CalculatedRequirements {
   
   // Szczegółowe rekomendacje na podstawie danych formularza
   lifestyleRecommendations: string[]; // Np. "Ze względu na dużo podroży, polecamy diesel", itp.
+  
+  // === PODZESPOŁY I KOMPONENTY SAMOCHODU ===
+  engineComponents?: {
+    type: string;
+    displacement: string;
+    power: string;
+    torque: string;
+    fuelInjection: string;
+    turbo: string;
+    valveTrain: string;
+    cooling: string;
+    description: string;
+  };
+  
+  transmissionSystem?: {
+    type: string;
+    gears: string;
+    driveType: string;
+    transferBox: string;
+    differentialType: string;
+    description: string;
+  };
+  
+  suspensionSystem?: {
+    frontType: string;
+    rearType: string;
+    springType: string;
+    dampersType: string;
+    stabilizers: string;
+    rideHeight: string;
+    description: string;
+  };
+  
+  brakingSystem?: {
+    frontBrakes: string;
+    rearBrakes: string;
+    servoType: string;
+    abs: string;
+    esp: string;
+    assistanceSystems: string[];
+    handBrake: string;
+    padType: string;
+    description: string;
+  };
+  
+  steeringSystem?: {
+    type: string;
+    assistType: string;
+    turnsRequired: string;
+    wheelSensitivity: string;
+    description: string;
+  };
+  
+  wheelTireSystem?: {
+    wheelSize: string;
+    wheelType: string;
+    tireWidth: string;
+    aspectRatio: string;
+    tireType: string;
+    winterTires: string;
+    tpms: string;
+    description: string;
+    recommendedBrand: string;
+  };
+  
+  chassisBodyStructure?: {
+    bodyType: string;
+    frametype: string;
+    reinforcedAreas: string[];
+    crumpleZones: string[];
+    materials: string;
+    description: string;
+  };
+  
+  bodyExterior?: {
+    length: string;
+    width: string;
+    height: string;
+    wheelbase: string;
+    groundClearance: string;
+    overhangs: string;
+    doors: string;
+    trunkSize: string;
+    roofRails: string;
+    windshield: string;
+    description: string;
+  };
+  
+  interiorSeating?: {
+    seats: string;
+    frontSeats: string;
+    rearSeats: string;
+    childSeatPoints: string;
+    seatMaterial: string;
+    lumbarSupport: string;
+    heatingCooling: string;
+    massage: string;
+    description: string;
+  };
+  
+  interiorComfort?: {
+    airConditioning: string;
+    ventilation: string;
+    cruiseControl: string;
+    parkingSensors: string;
+    steeringWheelControl: string;
+    infotainment: string;
+    soundSystem: string;
+    interior_lighting: string;
+    description: string;
+  };
+  
+  safetySystemsDetailed?: {
+    airbags: string;
+    frontAirbags: string;
+    sideAirbags: string;
+    curtainAirbags: string;
+    kneeBag: string;
+    esp: string;
+    asr: string;
+    hill_start_assist: string;
+    hill_descent_control: string;
+    laneKeeping: string;
+    collisionWarning: string;
+    blindSpotMonitor: string;
+    parkingAssistant: string;
+    description: string;
+  };
+  
+  lightingSystem?: {
+    headlights: string;
+    lowBeam: string;
+    highBeam: string;
+    fogLights: string;
+    rearLights: string;
+    drivingLights: string;
+    interiorLights: string;
+    autoLighting: string;
+    description: string;
+  };
+  
+  emissionControl?: {
+    exhaustSystem: string;
+    euStandard: string;
+    particleFilter: string;
+    noxReduction: string;
+    co2Emissions: string;
+    fuelConsumption: string;
+    description: string;
+  };
+  
+  powerSteeringElectronics?: {
+    steeringAssist: string;
+    torqueSensitive: string;
+    speedSensitive: string;
+    steeringControl: string;
+    description: string;
+  };
+  
+  batteryElectrical?: {
+    batteryCapacity: string;
+    batteryVoltage: string;
+    alternator: string;
+    starterMotor: string;
+    electricalBoxes: string;
+    description: string;
+  };
+  
+  coolingHeatingSystem?: {
+    radiator: string;
+    thermostat: string;
+    heater: string;
+    ventilation: string;
+    description: string;
+  };
+  
+  recommendedMaintenance?: {
+    oilChanges: string;
+    filterChanges: string;
+    fluidChecks: string;
+    tireRotation: string;
+    wheelAlignment: string;
+    brakePadReplacement: string;
+    batteryReplacement: string;
+    sparkPlugs: string;
+    adblueRefill: string;
+    description: string;
+  };
 }
 
 export interface Recommendation {

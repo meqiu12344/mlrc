@@ -2,11 +2,8 @@
 
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
-import { t } from '../lib/translations';
 
 export default function FAQSection() {
-  const { language } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const faqs = [
@@ -49,10 +46,10 @@ export default function FAQSection() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-4">
-            {t(language, 'faq.title')}
+            Często zadawane pytania
           </h2>
           <p className="text-xl text-gray-600">
-            {t(language, 'faq.subtitle')}
+            Odpowiedzi na pytania, które mogą Cię interesować
           </p>
         </div>
 

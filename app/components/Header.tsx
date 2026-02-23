@@ -2,11 +2,8 @@
 
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { BarChart3, Plus, LogOut } from 'lucide-react';
-import LanguageSelector from './LanguageSelector';
-import { t } from '../lib/translations';
 
 interface HeaderProps {
   onLogoClick?: () => void;
@@ -15,7 +12,6 @@ interface HeaderProps {
 
 export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
   const { user, logout } = useAuth();
-  const { language } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -65,25 +61,24 @@ export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
               onClick={() => handleNavigateToSection('jak-dziala')}
               className="text-gray-700 hover:text-[#b85450] transition-colors font-light"
             >
-              {t(language, 'nav.howItWorks')}
+              Jak to działa
             </button>
             <button 
               onClick={() => handleNavigateToSection('cechy')}
               className="text-gray-700 hover:text-[#b85450] transition-colors font-light"
             >
-              {t(language, 'nav.features')}
+              Cechy
             </button>
             <button 
               onClick={() => handleNavigateToSection('kontakt')}
               className="text-gray-700 hover:text-[#b85450] transition-colors font-light"
             >
-              {t(language, 'nav.contact')}
+              Kontakt
             </button>
           </div>
 
           {/* Auth Section - Right */}
           <div className="flex items-center gap-4 flex-shrink-0">
-            <LanguageSelector />
             {user ? (
               <div className="relative">
                 <button
@@ -103,14 +98,14 @@ export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
                     >
                       <BarChart3 className="w-4 h-4" />
-                      {t(language, 'nav.myProfile')}
+                      Mój profil
                     </button>
                     <button
                       onClick={() => router.push('/wizard')}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors flex items-center gap-2"
                     >
                       <Plus className="w-4 h-4" />
-                      {t(language, 'nav.newReport')}
+                      Nowy raport
                     </button>
                     <hr className="my-2" />
                     <button
@@ -118,20 +113,18 @@ export default function Header({ onLogoClick, onContactClick }: HeaderProps) {
                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
                     >
                       <LogOut className="w-4 h-4" />
-                      {t(language, 'nav.logout')}
+                      Wyloguj się
                     </button>
                   </div>
                 )}
               </div>
             ) : (
-              <>
-                <button
-                  onClick={() => router.push('/login')}
-                  className="px-6 py-2 text-gray-700 bg-gradient-to-r from-[#b85450] to-[#9d4540] text-white rounded-3xl transition-colors font-medium text-sm"
-                >
-                  Zaloguj się
-                </button>
-              </>
+              <button
+                onClick={() => router.push('/login')}
+                className="px-6 py-2 bg-gradient-to-r from-[#b85450] to-[#9d4540] text-white rounded-3xl transition-colors font-medium text-sm"
+              >
+                Zaloguj się
+              </button>
             )}
           </div>
         </nav>

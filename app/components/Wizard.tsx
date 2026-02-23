@@ -11,43 +11,45 @@ interface WizardProps {
   onComplete: () => void;
 }
 
-const totalSteps = 32;
+const totalSteps = 27;
 
 export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack, onComplete }: WizardProps) {
   const isCurrentStepValid = () => {
     switch (currentStep) {
-      case 1: return formData.monthlyIncome > 0;
-      case 2: return formData.dailyCommute !== null;
-      case 3: return formData.commuteType !== null;
-      case 4: return formData.dailyCommuteCongestion !== null;
-      case 5: return formData.dailyKmDriven >= 0;
-      case 6: return formData.accelerationImportance !== null;
-      case 7: return formData.parkingAtHome !== null;
-      case 8: return formData.parkingAtWork !== null;
-      case 9: return formData.householdSize >= 1;
-      case 10: return true; // childrenCount can be 0
-      case 11: return true; // elderlyPassengers is boolean
-      case 12: return formData.weeklyGroceries !== null;
-      case 13: return formData.sportsEquipment !== null;
-      case 14: return formData.petTransport !== null;
-      case 15: return true; // strollerType can be null if no kids
-      case 16: return true; // longTripsPerYear can be 0
-      case 17: return formData.vacationStyle !== null;
-      case 18: return formData.trunkFrequency !== null;
-      case 19: return formData.winterConditions !== null;
-      case 20: return formData.roadType !== null;
-      case 21: return formData.hilliness !== null;
-      case 22: return formData.weekendActivities !== null;
-      case 23: return formData.trailerNeeded !== null;
-      case 24: return formData.mainConcern !== null;
-      case 25: return formData.mechanicalSkills !== null;
-      case 26: return formData.plannedOwnership !== null;
-      case 27: return formData.maxMonthlyPayment !== null || formData.monthlyIncome > 0;
-      case 28: return formData.childSeats >= 0;
-      case 29: return formData.fuelTypePreference !== null;
-      case 30: return formData.bodyStylePreference !== null;
-      case 31: return formData.engineSizePreference !== null;
-      case 32: return formData.olxRegion !== null;
+      case 1: return formData.primaryUseLocation !== null;
+      case 2: return formData.tripLength !== null;
+      case 3: return formData.annualKilometers !== null;
+      case 4: return formData.dailyKmDriven >= 0;
+      case 5: return formData.accelerationImportance !== null;
+      case 6: return formData.parkingAtHome !== null;
+      case 7: return formData.parkingAtWork !== null;
+      case 8: return formData.parkingSkills !== null;
+      case 9: return formData.technologyPriority !== null;
+      case 10: return formData.nightDriving !== null;
+      case 11: return formData.householdSize >= 1;
+      case 12: return true; // childrenCount can be 0
+      case 13: return true; // elderlyPassengers is boolean
+      case 14: return formData.weeklyGroceries !== null;
+      case 15: return formData.sportsEquipment !== null;
+      case 16: return formData.petTransport !== null;
+      case 17: return true; // strollerType can be null if no kids
+      case 18: return true; // longTripsPerYear can be 0
+      case 19: return formData.vacationStyle !== null;
+      case 20: return formData.trunkFrequency !== null;
+      case 21: return formData.winterConditions !== null;
+      case 22: return formData.roadType !== null;
+      case 23: return formData.hilliness !== null;
+      case 24: return formData.weekendActivities !== null;
+      case 25: return formData.trailerNeeded !== null;
+      case 26: return formData.mainConcern !== null;
+      case 27: return formData.mechanicalSkills !== null;
+      case 28: return formData.servicePriority !== null;
+      case 29: return formData.ownershipDuration !== null;
+      case 30: return formData.maxMonthlyPayment !== null;
+      case 31: return formData.childSeats >= 0;
+      case 32: return formData.fuelTypePreference !== null;
+      case 33: return formData.bodyStylePreference !== null;
+      case 34: return formData.olxRegion !== null;
       default: return false;
     }
   };
@@ -80,47 +82,54 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
         {/* Question Card */}
         <div className="bg-white rounded-2xl shadow-sm p-8 md:p-12 mb-8">
           
-          {/* Step 1: Monthly Income */}
+          {/* Step 1: Primary Use Location */}
           {currentStep === 1 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
-                Ile zarabiasz miesięcznie?
+                Gdzie najczęściej będziesz używać auta?
               </h2>
-              <p className="text-gray-600 mb-8">Podaj swoje dochody netto (na rękę)</p>
-              <div className="space-y-4">
-                <input
-                  type="number"
-                  value={formData.monthlyIncome || ''}
-                  onChange={(e) => onUpdate('monthlyIncome', parseFloat(e.target.value) || 0)}
-                  placeholder="np. 5000"
-                  className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-[#b85450] focus:outline-none text-lg"
-                />
-                <p className="text-sm text-gray-500">
-                  To pomoże oszacować realistyczny budżet na auto i koszty miesięczne
-                </p>
+              <p className="text-gray-600 mb-8">To pomoże dobrać odpowiedni napęd i silnik</p>
+              <div className="space-y-3">
+                {[
+                  { value: 'city', label: 'Tylko miasto', desc: 'Zakupy, praca, krótkie trasy' },
+                  { value: 'highway', label: 'Głównie trasy', desc: 'Wyjazdy do rodziny, wakacje, długie dystanse' },
+                  { value: 'mixed', label: 'Pół na pół', desc: 'Miasto + dłuższe wyjazdy' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('primaryUseLocation', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.primaryUseLocation === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Step 2: Daily Commute */}
+          {/* Step 2: Trip Length */}
           {currentStep === 2 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
-                Jak daleko dojeżdżasz do pracy?
+                Jak długie trasy pokonujesz na co dzień?
               </h2>
-              <p className="text-gray-600 mb-8">Jeden kierunek</p>
+              <p className="text-gray-600 mb-8">To wpływa na trwałość silnika i koszty eksploatacji</p>
               <div className="space-y-3">
                 {[
-                  { value: 'none', label: 'Nie dojeżdżam / praca zdalna', desc: '0 km' },
-                  { value: 'short', label: 'Blisko', desc: '< 10 km' },
-                  { value: 'medium', label: 'Średnio daleko', desc: '10-40 km' },
-                  { value: 'long', label: 'Daleko', desc: '> 40 km' }
+                  { value: 'short', label: 'Krótkie', desc: 'Do 10 km - zakupy, dowożenie dzieci' },
+                  { value: 'medium', label: 'Średnie', desc: '10-30 km - dojazd do pracy' },
+                  { value: 'long', label: 'Długie', desc: 'Powyżej 30 km - dłuższe trasy' }
                 ].map(opt => (
                   <button
                     key={opt.value}
-                    onClick={() => onUpdate('dailyCommute', opt.value)}
+                    onClick={() => onUpdate('tripLength', opt.value)}
                     className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                      formData.dailyCommute === opt.value
+                      formData.tripLength === opt.value
                         ? 'border-[#b85450] bg-[#faf5f5]'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
@@ -133,24 +142,24 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 3: Commute Type */}
+          {/* Step 3: Annual Kilometers */}
           {currentStep === 3 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
-                Czym głównie jeździsz do pracy?
+                Ile kilometrów przejedziesz w ciągu roku?
               </h2>
-              <p className="text-gray-600 mb-8">Dominujący typ drogi</p>
+              <p className="text-gray-600 mb-8">To pomoże wybrać najbardziej ekonomiczny napęd</p>
               <div className="space-y-3">
                 {[
-                  { value: 'city', label: 'Miasto', desc: 'Ulice, korki, częste zatrzymywania' },
-                  { value: 'mixed', label: 'Mieszane', desc: 'Część miasto, część trasa' },
-                  { value: 'highway', label: 'Autostrada/Trasa', desc: 'Głównie szybka jazda' }
+                  { value: 'low', label: 'Mało', desc: 'Poniżej 10 000 km rocznie' },
+                  { value: 'medium', label: 'Standardowo', desc: '10 000 - 20 000 km rocznie' },
+                  { value: 'high', label: 'Dużo', desc: 'Powyżej 20 000 km rocznie' }
                 ].map(opt => (
                   <button
                     key={opt.value}
-                    onClick={() => onUpdate('commuteType', opt.value)}
+                    onClick={() => onUpdate('annualKilometers', opt.value)}
                     className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                      formData.commuteType === opt.value
+                      formData.annualKilometers === opt.value
                         ? 'border-[#b85450] bg-[#faf5f5]'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
@@ -163,38 +172,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 4: Daily Commute Congestion */}
+          {/* Step 4: Daily KM Driven */}
           {currentStep === 4 && (
-            <div>
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
-                Jaki jest poziom ruchu w Twoim dojeździe?
-              </h2>
-              <p className="text-gray-600 mb-8">Od tego zależy zużycie paliwa i komfort</p>
-              <div className="space-y-3">
-                {[
-                  { value: 'light', label: 'Lekki ruch', desc: 'Płynna jazda, rzadko korki' },
-                  { value: 'moderate', label: 'Umiarkowany', desc: 'Czasem korki, czasem płynnie' },
-                  { value: 'heavy', label: 'Ciężki ruch', desc: 'Niemal zawsze korki, zatory' }
-                ].map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => onUpdate('dailyCommuteCongestion', opt.value)}
-                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                      formData.dailyCommuteCongestion === opt.value
-                        ? 'border-[#b85450] bg-[#faf5f5]'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="font-medium text-gray-900">{opt.label}</div>
-                    <div className="text-sm text-gray-500">{opt.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 5: Daily KM Driven */}
-          {currentStep === 5 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Ile kilometrów dziennie jeździsz?
@@ -216,8 +195,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 6: Acceleration Importance */}
-          {currentStep === 6 && (
+          {/* Step 5: Acceleration Importance */}
+          {currentStep === 5 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Jak ważne jest szybkie przyspieszanie?
@@ -246,8 +225,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 7: Parking at Home */}
-          {currentStep === 7 && (
+          {/* Step 6: Parking at Home */}
+          {currentStep === 6 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Gdzie parkujesz w domu?
@@ -275,8 +254,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 8: Parking at Work */}
-          {currentStep === 8 && (
+          {/* Step 7: Parking at Work */}
+          {currentStep === 7 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Gdzie parkujesz w pracy?
@@ -305,8 +284,97 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 9: Household Size */}
+          {/* Step 8: Parking Skills */}
+          {currentStep === 8 && (
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Jak oceniasz swoje umiejętności parkowania?
+              </h2>
+              <p className="text-gray-600 mb-8">To pomoże dobrać odpowiednie systemy wspomagające</p>
+              <div className="space-y-3">
+                {[
+                  { value: 'stressed', label: 'Parkowanie to dla mnie stres', desc: 'Potrzebuję kamer 360° i asystenta parkowania' },
+                  { value: 'confident', label: 'Czuję się pewnie', desc: 'Czujniki parkowania wystarczą' },
+                  { value: 'easy', label: 'Parkuję bez problemu', desc: 'Nie potrzebuję dodatkowych systemów' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('parkingSkills', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.parkingSkills === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 9: Technology Priority */}
           {currentStep === 9 && (
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Jak bardzo zależy Ci na nowoczesnych gadżetach?
+              </h2>
+              <p className="text-gray-600 mb-8">Android Auto/Apple CarPlay pozwala używać map z telefonu na ekranie auta</p>
+              <div className="space-y-3">
+                {[
+                  { value: 'carplay', label: 'Chcę mieć mapy z telefonu na ekranie', desc: 'Android Auto lub Apple CarPlay' },
+                  { value: 'radio', label: 'Wystarczy mi radio', desc: 'Podstawowy system audio' },
+                  { value: 'none', label: 'Nie potrzebuję elektroniki', desc: 'Im prostsze, tym lepiej' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('technologyPriority', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.technologyPriority === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 10: Night Driving */}
+          {currentStep === 10 && (
+            <div>
+              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
+                Czy często jeździsz po zmroku?
+              </h2>
+              <p className="text-gray-600 mb-8">Dobre światła LED drastycznie zmniejszają zmęczenie wzroku w nocy</p>
+              <div className="space-y-3">
+                {[
+                  { value: 'often', label: 'Tak, często', desc: 'Rekomendujemy światła LED lub Matrix LED' },
+                  { value: 'rarely', label: 'Bardzo rzadko', desc: 'Standardowe światła wystarczą' }
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => onUpdate('nightDriving', opt.value)}
+                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                      formData.nightDriving === opt.value
+                        ? 'border-[#b85450] bg-[#faf5f5]'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">{opt.label}</div>
+                    <div className="text-sm text-gray-500">{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 11: Household Size */}
+          {currentStep === 11 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Ile osób mieszka w Twoim domu?
@@ -322,8 +390,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 10: Children Count */}
-          {currentStep === 10 && (
+          {/* Step 12: Children Count */}
+          {currentStep === 12 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Ile masz dzieci?
@@ -339,8 +407,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 11: Elderly Passengers */}
-          {currentStep === 11 && (
+          {/* Step 10: Elderly Passengers */}
+          {currentStep === 10 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Czy regularnie wozisz osoby starsze?
@@ -368,8 +436,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 12: Weekly Groceries */}
-          {currentStep === 12 && (
+          {/* Step 11: Weekly Groceries */}
+          {currentStep === 11 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Jak duże robisz zakupy tygodniowe?
@@ -397,8 +465,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 13: Sports Equipment */}
-          {currentStep === 13 && (
+          {/* Step 12: Sports Equipment */}
+          {currentStep === 12 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Czy przewozisz sprzęt sportowy?
@@ -426,8 +494,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 14: Pet Transport */}
-          {currentStep === 14 && (
+          {/* Step 13: Pet Transport */}
+          {currentStep === 13 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Czy przewozisz zwierzęta?
@@ -455,8 +523,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 15: Stroller Type */}
-          {currentStep === 15 && (
+          {/* Step 14: Stroller Type */}
+          {currentStep === 14 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Czy używasz wózka dziecięcego?
@@ -484,8 +552,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 16: Long Trips */}
-          {currentStep === 16 && (
+          {/* Step 15: Long Trips */}
+          {currentStep === 15 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Ile razy rocznie jeździsz na dłuższe trasy?
@@ -502,8 +570,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 17: Vacation Style */}
-          {currentStep === 17 && (
+          {/* Step 16: Vacation Style */}
+          {currentStep === 16 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Jaki masz styl wakacji?
@@ -532,8 +600,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 18: Trunk Frequency */}
-          {currentStep === 18 && (
+          {/* Step 17: Trunk Frequency */}
+          {currentStep === 17 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Jak często używasz bagażnika do maximum?
@@ -562,8 +630,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 19: Winter Conditions */}
-          {currentStep === 19 && (
+          {/* Step 18: Winter Conditions */}
+          {currentStep === 18 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Jak wyglądają warunki zimowe tam gdzie mieszkasz?
@@ -592,8 +660,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 20: Road Type */}
-          {currentStep === 20 && (
+          {/* Step 19: Road Type */}
+          {currentStep === 19 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Jakimi drogami jeździsz?
@@ -621,8 +689,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 21: Hilliness */}
-          {currentStep === 21 && (
+          {/* Step 20: Hilliness */}
+          {currentStep === 20 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Jaki jest teren w okolicy?
@@ -650,8 +718,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 22: Weekend Activities */}
-          {currentStep === 22 && (
+          {/* Step 21: Weekend Activities */}
+          {currentStep === 21 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Co robisz w weekendy?
@@ -680,8 +748,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 23: Trailer Needed */}
-          {currentStep === 23 && (
+          {/* Step 22: Trailer Needed */}
+          {currentStep === 22 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Czy potrzebujesz holować przyczepę?
@@ -709,8 +777,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 24: Main Concern */}
-          {currentStep === 24 && (
+          {/* Step 23: Main Concern */}
+          {currentStep === 23 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Co jest dla Ciebie najważniejsze?
@@ -739,8 +807,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 25: Mechanical Skills */}
-          {currentStep === 25 && (
+          {/* Step 24: Mechanical Skills */}
+          {currentStep === 24 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Czy masz umiejętności mechaniczne?
@@ -769,8 +837,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 26: Planned Ownership */}
-          {currentStep === 26 && (
+          {/* Step 25: Planned Ownership */}
+          {currentStep === 25 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Jak długo planujesz używać tego auta?
@@ -798,8 +866,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 27: Monthly Payment */}
-          {currentStep === 27 && (
+          {/* Step 26: Monthly Payment */}
+          {currentStep === 26 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Ile maksymalnie możesz płacić miesięcznie?
@@ -818,8 +886,8 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
             </div>
           )}
 
-          {/* Step 28: Child Seats */}
-          {currentStep === 28 && (
+          {/* Step 27: Child Seats */}
+          {currentStep === 27 && (
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
                 Ile fotelików dziecięcych potrzebujesz?
@@ -836,123 +904,6 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
               <p className="text-sm text-gray-500 mt-4">
                 Większość aut ma 2 mocowania ISOFIX w tylnej kanapie
               </p>
-            </div>
-          )}
-
-          {/* Step 29: Fuel Type Preference */}
-          {currentStep === 29 && (
-            <div>
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
-                Czy masz preferencję co do paliwa?
-              </h2>
-              <p className="text-gray-600 mb-8">Wybierz czy chcesz otwartą rekomendację czy konkretne paliwo</p>
-              <div className="space-y-3">
-                {[
-                  { value: 'open', label: 'Niech algorytm zdecyduje', desc: 'Rekomendacja na podstawie Twoich nawyków' },
-                  { value: 'specified', label: 'Mam preferencję', desc: 'Chcę wybrać konkretne paliwo' }
-                ].map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => onUpdate('fuelTypePreference', opt.value)}
-                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                      formData.fuelTypePreference === opt.value
-                        ? 'border-[#b85450] bg-[#faf5f5]'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="font-medium text-gray-900">{opt.label}</div>
-                    <div className="text-sm text-gray-500">{opt.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 30: Body Style Preference */}
-          {currentStep === 30 && (
-            <div>
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
-                Czy masz preferencję co do typu nadwozia?
-              </h2>
-              <p className="text-gray-600 mb-8">Wybierz czy chcesz otwartą rekomendację czy konkretny typ</p>
-              <div className="space-y-3">
-                {[
-                  { value: 'open', label: 'Niech algorytm zdecyduje', desc: 'Rekomendacja na podstawie Twoich potrzeb' },
-                  { value: 'specified', label: 'Mam preferencję', desc: 'Chcę wybrać konkretny typ nadwozia' }
-                ].map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => onUpdate('bodyStylePreference', opt.value)}
-                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                      formData.bodyStylePreference === opt.value
-                        ? 'border-[#b85450] bg-[#faf5f5]'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="font-medium text-gray-900">{opt.label}</div>
-                    <div className="text-sm text-gray-500">{opt.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 31: Engine Size Preference */}
-          {currentStep === 31 && (
-            <div>
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
-                Czy masz preferencję co do pojemności silnika?
-              </h2>
-              <p className="text-gray-600 mb-8">Algorytm obliczy optymalną pojemność - czy chcesz jej słuchać?</p>
-              <div className="space-y-3">
-                {[
-                  { value: 'open', label: 'Zaufam algorytmowi', desc: 'Rekomendacja na podstawie Twoich nawyków' },
-                  { value: 'specified', label: 'Mam preferencję', desc: 'Chcę konkretną pojemność (np. mały silnik)' }
-                ].map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => onUpdate('engineSizePreference', opt.value)}
-                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                      formData.engineSizePreference === opt.value
-                        ? 'border-[#b85450] bg-[#faf5f5]'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="font-medium text-gray-900">{opt.label}</div>
-                    <div className="text-sm text-gray-500">{opt.desc}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Step 32: OLX Region */}
-          {currentStep === 32 && (
-            <div>
-              <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-4">
-                W jakim regionie szukać ofert na OLX?
-              </h2>
-              <p className="text-gray-600 mb-8">Wybierz województwem gdzie będziemy szukać ogłoszeń</p>
-              <div className="space-y-3">
-                {[
-                  'Dolnośląskie', 'Kujawsko-Pomorskie', 'Lubelskie', 'Lubuskie', 'Łódzkie',
-                  'Małopolskie', 'Mazowieckie', 'Opolskie', 'Podkarpackie', 'Podlaskie',
-                  'Pomorskie', 'Śląskie', 'Świętokrzyskie', 'Warmińsko-Mazurskie', 'Wielkopolskie',
-                  'Zachodniopomorskie'
-                ].map(region => (
-                  <button
-                    key={region}
-                    onClick={() => onUpdate('olxRegion', region)}
-                    className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                      formData.olxRegion === region
-                        ? 'border-[#b85450] bg-[#faf5f5]'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="font-medium text-gray-900">{region}</div>
-                  </button>
-                ))}
-              </div>
             </div>
           )}
 

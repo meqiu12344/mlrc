@@ -1,41 +1,38 @@
 'use client';
 
 import { TrendingUp, DollarSign, Clock, Shield, Brain, CheckCircle } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
-import { t } from '../lib/translations';
 
 export default function BenefitsSection() {
-  const { language } = useLanguage();
   const benefits = [
     {
       icon: DollarSign,
-      title: t(language, 'benefits.save12k.title'),
-      description: t(language, 'benefits.save12k.desc')
+      title: 'Zaoszczędź nawet 12 tys. zł',
+      description: 'Dzięki mądrzejszym wyborom możesz zaoszczędzić znaczne kwoty na wyborze pojazdu'
     },
     {
       icon: Clock,
-      title: t(language, 'benefits.time.title'),
-      description: t(language, 'benefits.time.desc')
+      title: 'Oszczędź czas',
+      description: 'Zamiast godzin przeglądania ofert, masz konkretne rekomendacje w 15 minut'
     },
     {
       icon: Brain,
-      title: t(language, 'benefits.understand.title'),
-      description: t(language, 'benefits.understand.desc')
+      title: 'Zrozumiej swoje potrzeby',
+      description: 'System logicznych pytań pomaga Ci zidentyfikować, czego naprawdę potrzebujesz'
     },
     {
       icon: Shield,
-      title: t(language, 'benefits.confidence.title'),
-      description: t(language, 'benefits.confidence.desc')
+      title: 'Kupuj z pewnością siebie',
+      description: 'Wiesz dokładnie, dlaczego wybrałeś konkretny model'
     },
     {
       icon: TrendingUp,
-      title: t(language, 'benefits.value.title'),
-      description: t(language, 'benefits.value.desc')
+      title: 'Zwiększ wartość decyzji',
+      description: 'Długoterminowa satysfakcja z wyboru - nie żałujesz ani miesiąc, ani rok potem'
     },
     {
       icon: CheckCircle,
-      title: t(language, 'benefits.support.title'),
-      description: t(language, 'benefits.support.desc')
+      title: 'Wsparcie na całej drodze',
+      description: 'Raport zawiera wszystkie informacje potrzebne do samodzielnej decyzji'
     }
   ];
 
@@ -44,10 +41,10 @@ export default function BenefitsSection() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-4">
-            {t(language, 'benefits.title')} <span className="font-semibold">{t(language, 'benefits.titleHighlight')}</span>
+            Korzyści <span className="font-semibold">jakie zyskasz</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            {t(language, 'benefits.subtitle')}
+            Wszystko co musisz wiedzieć o wyborze samochodu, zebrané w jednym miejscu
           </p>
         </div>
 
@@ -75,18 +72,18 @@ export default function BenefitsSection() {
 
         <div className="mt-16 bg-gradient-to-r from-[#faf5f5] to-white border border-gray-200 rounded-2xl p-10 md:p-14">
           <h3 className="text-2xl font-semibold text-gray-900 mb-8">
-            {t(language, 'benefits.includes')}
+            Raport zawiera:
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
             {[
-              t(language, 'benefits.item1'),
-              t(language, 'benefits.item2'),
-              t(language, 'benefits.item3'),
-              t(language, 'benefits.item4'),
-              t(language, 'benefits.item5'),
-              t(language, 'benefits.item6'),
-              t(language, 'benefits.item7'),
-              t(language, 'benefits.item8')
+              'Analiza Twoich rzeczywistych potrzeb',
+              'Lista 5-10 najlepszych modeli',
+              'Porównanie specyfikacji technicznych',
+              'Średnie ceny na polskim rynku',
+              'Typowe problemy każdego modelu',
+              'Koszty utrzymania i eksploatacji',
+              'Rekomendacje wersji i wyposażenia',
+              'Porady na temat bezpieczeństwa'
             ].map((item, index) => (
               <div key={index} className="flex items-start gap-3">
                 <CheckCircle className="w-6 h-6 text-[#b85450] flex-shrink-0 mt-0.5" />

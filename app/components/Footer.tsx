@@ -1,11 +1,8 @@
 'use client';
 
 import { Facebook, Twitter, Linkedin } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
-import { t } from '../lib/translations';
 
 export default function Footer() {
-  const { language } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -21,40 +18,40 @@ export default function Footer() {
               className="h-10 w-auto mb-4"
             />
             <p className="text-sm font-light text-gray-500">
-              {t(language, 'footer.tagline')}
+              Profesjonalne raporty do wyborów samochodu
             </p>
           </div>
 
           {/* Product */}
           <div>
-            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wide">{t(language, 'footer.product')}</h4>
+            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wide">Produkt</h4>
             <ul className="space-y-3">
-              <li><a href="#jak-dziala" className="hover:text-white transition-colors font-light">{t(language, 'footer.howItWorks')}</a></li>
-              <li><a href="#cechy" className="hover:text-white transition-colors font-light">{t(language, 'footer.features')}</a></li>
-              <li><a href="#cennik" className="hover:text-white transition-colors font-light">{t(language, 'footer.pricing')}</a></li>
-              <li><a href="#" className="hover:text-white transition-colors font-light">{t(language, 'footer.security')}</a></li>
+              <li><a href="#jak-dziala" className="hover:text-white transition-colors font-light">Jak to działa</a></li>
+              <li><a href="#cechy" className="hover:text-white transition-colors font-light">Cechy</a></li>
+              <li><a href="#cennik" className="hover:text-white transition-colors font-light">Cennik</a></li>
+              <li><a href="#" className="hover:text-white transition-colors font-light">Bezpieczeństwo</a></li>
             </ul>
           </div>
 
           {/* Company */}
           <div>
-            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wide">{t(language, 'footer.company')}</h4>
+            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wide">Firma</h4>
             <ul className="space-y-3">
-              <li><a href="#" className="hover:text-white transition-colors font-light">{t(language, 'footer.about')}</a></li>
-              <li><a href="#" className="hover:text-white transition-colors font-light">{t(language, 'footer.blog')}</a></li>
-              <li><a href="#" className="hover:text-white transition-colors font-light">{t(language, 'footer.careers')}</a></li>
-              <li><a href="#" className="hover:text-white transition-colors font-light">{t(language, 'footer.contact')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors font-light">O nas</a></li>
+              <li><a href="#" className="hover:text-white transition-colors font-light">Blog</a></li>
+              <li><a href="#" className="hover:text-white transition-colors font-light">Kariera</a></li>
+              <li><a href="#" className="hover:text-white transition-colors font-light">Kontakt</a></li>
             </ul>
           </div>
 
           {/* Legal */}
           <div>
-            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wide">{t(language, 'footer.legal')}</h4>
+            <h4 className="text-white font-semibold mb-6 text-sm uppercase tracking-wide">Prawo</h4>
             <ul className="space-y-3">
-              <li><a href="#" className="hover:text-white transition-colors font-light">{t(language, 'footer.privacy')}</a></li>
-              <li><a href="#" className="hover:text-white transition-colors font-light">{t(language, 'footer.terms')}</a></li>
-              <li><a href="#" className="hover:text-white transition-colors font-light">{t(language, 'footer.cookies')}</a></li>
-              <li><a href="#" className="hover:text-white transition-colors font-light">{t(language, 'footer.status')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors font-light">Polityka prywatności</a></li>
+              <li><a href="#" className="hover:text-white transition-colors font-light">Warunki użytkowania</a></li>
+              <li><a href="#" className="hover:text-white transition-colors font-light">Polityka plików cookies</a></li>
+              <li><a href="#" className="hover:text-white transition-colors font-light">Status</a></li>
             </ul>
           </div>
         </div>
@@ -64,7 +61,7 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             {/* Copyright */}
             <p className="text-sm text-gray-500 font-light">
-              © {currentYear} {t(language, 'footer.copyright')}
+              © {currentYear} My Little Red Car. Wszystkie prawa zastrzeżone.
             </p>
 
             {/* Social Links */}

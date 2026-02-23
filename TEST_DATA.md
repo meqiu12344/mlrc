@@ -63,7 +63,6 @@ const testReport = {
   isPaid: false,
   title: 'Mój pierwszy raport',
   formData: {
-    monthlyIncome: 8000,
     maxMonthlyPayment: 1500,
     dailyCommute: 'medium',
     commuteType: 'mixed',
