@@ -316,7 +316,6 @@ export function calculateRequirements(data: FormData): CalculatedRequirements {
     recommendedSegments: segments,
     recommendedBodyStyles: bodyStyles,
     preferredFuelTypes: recommendedFuelType === 'Diesel' ? ['diesel', 'benzyna'] : recommendedFuelType === 'Hybrid' ? ['hybrid', 'diesel'] : ['benzyna', 'diesel'],
-    olxSearchRegion: data.olxRegion || "",
     
     // Uzasadnienia
     reasoning,

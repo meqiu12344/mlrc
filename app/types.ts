@@ -91,7 +91,6 @@ export interface CalculatedRequirements {
   recommendedSegments: string[]; // ['C', 'C-SUV', 'Van']
   recommendedBodyStyles: string[]; // ['Kombi', 'SUV', 'Van']
   preferredFuelTypes: string[]; // ['benzyna', 'diesel', 'hybrid']
-  olxSearchRegion: string; // Region do wyszukiwania
   
   // Uzasadnienia - dlaczego takie parametry
   reasoning: {

@@ -43,13 +43,6 @@ export default function Wizard({ formData, currentStep, onUpdate, onNext, onBack
       case 25: return formData.trailerNeeded !== null;
       case 26: return formData.mainConcern !== null;
       case 27: return formData.mechanicalSkills !== null;
-      case 28: return formData.servicePriority !== null;
-      case 29: return formData.ownershipDuration !== null;
-      case 30: return formData.maxMonthlyPayment !== null;
-      case 31: return formData.childSeats >= 0;
-      case 32: return formData.fuelTypePreference !== null;
-      case 33: return formData.bodyStylePreference !== null;
-      case 34: return formData.olxRegion !== null;
       default: return false;
     }
   };
